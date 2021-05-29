@@ -1,0 +1,23 @@
+:root {
+    --PRIMARY: #ff5757;
+    --SECONDARY: #3ea2c4;
+    --LIGHT-GREY: #d9d9d9
+}
+
+.App {
+
+}
+.test1 {
+    border: solid blue 3px;
+}
+.brand-image {
+    margin: 0 10px;
+}
+
+.nav-bg {
+    background-color: var(--PRIMARY);
+}
+
+.btn-text {
+    font-size: 16px;
+}
