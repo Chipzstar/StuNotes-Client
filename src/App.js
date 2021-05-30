@@ -1,14 +1,17 @@
 import "./stylesheets/App.css";
 import { BrowserRouter as Router } from "react-router-dom";
+// original file
+import routes from './router'
 import Navbar from "./components/NavBar";
-import Landing from "./containers/Landing";
 
 function App() {
 	return (
 		<Router>
 			<div className="App">
 				<Navbar/>
-				<Landing/>
+			</div>
+			<div>
+				{routes}
 			</div>
 		</Router>
 	);

@@ -1,7 +1,8 @@
 :root {
     --PRIMARY: #ff5757;
     --SECONDARY: #3ea2c4;
-    --LIGHT-GREY: #d9d9d9
+    --LIGHT-GREY: #d9d9d9;
+    --ERROR: #ff0033;
 }
 
 .App {
@@ -9,6 +10,14 @@
 }
 .test1 {
     border: solid blue 3px;
+}
+
+.test2 {
+    border: solid red 2px;
+}
+
+.test3 {
+    border: solid green 1.5cm;
 }
 .brand-image {
     margin: 0 10px;
@@ -20,4 +29,9 @@
 
 .btn-text {
     font-size: 16px;
+}
+
+.error {
+    color: var(--ERROR);
+    font-size: 0.9rem;
 }

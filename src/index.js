@@ -7,7 +7,7 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 
 import 'mdb-ui-kit/css/mdb.min.css';
-import "./stylesheets/main.css"
+import "./stylesheets/main.css";
 import 'bootstrap/dist/js/bootstrap.bundle.min';
 
 ReactDOM.render(
