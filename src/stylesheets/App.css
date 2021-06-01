@@ -31,6 +31,10 @@
     font-size: 16px;
 }
 
+.logout {
+
+}
+
 .error {
     color: var(--ERROR);
     font-size: 0.9rem;

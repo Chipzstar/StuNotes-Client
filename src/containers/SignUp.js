@@ -1,16 +1,40 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { Modal } from "bootstrap";
 import { ErrorMessage, Formik } from "formik";
 import { SignupSchema } from "../validation/validate";
 import "../stylesheets/App.css";
+import { registerNewUser } from "../firebase";
+import { useHistory } from 'react-router-dom';
 
 const SignUp = () => {
+	const history = useHistory();
+	const [modal, setModal] = useState(false)
+	const [error, setError] = useState(null)
+	const myModal = useRef()
 
-	// const handleSubmit = (event) => {
-	// 	event.preventDefault();
-	// }
+	useEffect(() => {
+		setModal(new Modal(myModal.current))
+	}, [])
+
+	const alertMessage = (
+		<div className="modal show" ref={myModal} tabIndex="-1" aria-hidden="true">
+			<div className="modal-dialog">
+				<div className="alert alert-danger">
+					<div className="modal-header">
+						<h5 className="modal-title">Oops!</h5>
+						<button type="button" role="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"/>
+					</div>
+					<div className="modal-body" role="alert">
+						{error}
+					</div>
+				</div>
+			</div>
+		</div>
+	);
 
 	return (
 		<div className="py-5 container d-flex flex-column align-items-center">
+			{alertMessage}
 			<h1 className="text-center pb-4">Sign up</h1>
 			<div className="mx-5">
 				<Formik
@@ -18,18 +42,22 @@ const SignUp = () => {
 						firstName: "",
 						lastName: "",
 						emailAddress: "",
-						password: "hello",
-						confirmPassword: ""
+						password: "",
+						confirmPassword: "",
+						termsOfService: false
 					}}
 					validationSchema={SignupSchema}
 					onSubmit={(values, actions) => {
-						setTimeout(() => {
-							alert(JSON.stringify(values, null, 2));
-							actions.setSubmitting(false);
-						}, 1000);
+						registerNewUser(values)
+							.then(() => history.push("/home"))
+							.catch(({message} ) => {
+								console.error(message)
+								setError(message)
+								modal.show()
+							})
 					}}
 				>
-					{({ values, handleSubmit, handleChange, handleBlur, touched, errors }) => (
+					{({ handleSubmit, handleChange, handleBlur, touched, errors }) => (
 						<form onSubmit={handleSubmit}>
 							<div className="row mb-4">
 								<div className="col">
@@ -118,21 +146,28 @@ const SignUp = () => {
 
 							<div className="form-check d-flex justify-content-center mb-4">
 								<input
-									className="form-check-input me-2"
 									type="checkbox"
-									value=""
-									id="t&c"
+									id="termsOfService"
+									name="termsOfService"
+									required
+									className={`form-check-input me-2 ${touched.terms && errors.terms && "is-invalid"}`}
 								/>
-								<label className="form-check-label" htmlFor="t&c">
+								<label className="form-check-label" htmlFor="termsOfService">
 									Accept terms and conditions
 								</label>
+								<ErrorMessage
+									name="termsOfService"
+									render={msg => <span className="error">{msg}</span>}
+								/>
 							</div>
 							<div className="d-flex flex-row justify-content-center">
 								<div className="text-center mx-4">
-									<button type="submit" className="btn btn-lg btn-secondary mb-4"><span className="text-capitalize">Sign up</span></button>
+									<button type="submit" className="btn btn-lg btn-secondary mb-4"><span
+										className="text-capitalize">Sign up</span></button>
 								</div>
 								<div className="text-center mx-4">
-									<button type="reset" className="btn btn-lg btn-warning mb-4"><span className="text-capitalize">Reset</span></button>
+									<button type="reset" className="btn btn-lg btn-warning mb-4"><span
+										className="text-capitalize">Reset</span></button>
 								</div>
 							</div>
 

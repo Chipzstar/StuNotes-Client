@@ -14,15 +14,6 @@ class Landing extends Component {
 					<p className="lead" >
 						A simple application for School / University students to collaborate together on notes
 					</p>
-					{/*<p className="py-4 d-flex">
-						<a
-							className="btn btn-lg bg-success"
-							href="#!"
-							role="button"
-						>
-							Register now!
-						</a>
-					</p>*/}
 				</div>
 				<div className="row">
 					<div className='col-xl-4 col-lg-4 col-md-4 col-sm-12 px-3'>
