@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Modal } from "bootstrap";
 import { ErrorMessage, Formik } from "formik";
-import { SignupSchema } from "../validation/validate";
+import { SignUpSchema } from "../validation";
 import "../stylesheets/App.css";
 import { registerNewUser } from "../firebase";
 import { useHistory } from 'react-router-dom';
@@ -46,7 +46,7 @@ const SignUp = () => {
 						confirmPassword: "",
 						termsOfService: false
 					}}
-					validationSchema={SignupSchema}
+					validationSchema={SignUpSchema}
 					onSubmit={(values, actions) => {
 						registerNewUser(values)
 							.then(() => history.push("/home"))

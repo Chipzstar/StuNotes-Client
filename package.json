@@ -36,7 +36,8 @@
   "prettier": {
     "tabWidth": 4,
     "arrowParens": "avoid",
-    "useTabs": true
+    "useTabs": true,
+    "singleQuote": true
   },
   "eslintConfig": {
     "extends": [
