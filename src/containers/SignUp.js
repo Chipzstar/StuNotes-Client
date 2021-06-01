@@ -22,9 +22,9 @@ const SignUp = () => {
 				<div className="alert alert-danger">
 					<div className="modal-header">
 						<h5 className="modal-title">Oops!</h5>
-						<button type="button" role="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"/>
+						<button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"/>
 					</div>
-					<div className="modal-body" role="alert">
+					<div className="modal-body">
 						{error}
 					</div>
 				</div>

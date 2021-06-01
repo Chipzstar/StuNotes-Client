@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import "../validation";
-import { useHistory } from "react-router-dom";
+import { Link, useHistory } from "react-router-dom";
 import { Modal } from "bootstrap";
 import { loginUser } from "../firebase";
 import { SignInSchema } from "../validation";
@@ -22,10 +22,9 @@ const SignIn = () => {
 				<div className="alert alert-danger">
 					<div className="modal-header">
 						<h5 className="modal-title">Oops!</h5>
-						<button type="button" role="button" className="btn-close" data-bs-dismiss="modal"
-						        aria-label="Close" />
+						<button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close" />
 					</div>
-					<div className="modal-body" role="alert">
+					<div className="modal-body">
 						{error}
 					</div>
 				</div>
@@ -37,15 +36,11 @@ const SignIn = () => {
 		<div className="py-5 container d-flex flex-column align-items-center">
 			{alertMessage}
 			<h1 className="text-center pb-5">Sign in</h1>
-			<div className="mx-5 w-50">
+			<div className="mx-5 w-25">
 				<Formik
 					initialValues={{
-						firstName: "",
-						lastName: "",
 						emailAddress: "",
-						password: "",
-						confirmPassword: "",
-						termsOfService: false
+						password: ""
 					}}
 					validationSchema={SignInSchema}
 					onSubmit={(values, actions) => {
@@ -91,12 +86,12 @@ const SignIn = () => {
 								<label className="form-label" htmlFor="password">Password</label>
 							</div>
 
-							<div className="text-center pt-4">
-								<button type="submit" className="btn btn-secondary mb-4 text-capitalize">Login</button>
+							<div className="text-center">
+								<button type="submit" className="btn btn-secondary mb-4 text-capitalize w-100">Login</button>
 							</div>
 
-							<div className="text-center">
-								<p>or sign up with:</p>
+							<div className="text-center mb-4">
+								<p>or sign in with:</p>
 								<button type="button" className="btn btn-secondary btn-floating mx-2">
 									<i className="fab fa-facebook-f" />
 								</button>
@@ -104,6 +99,9 @@ const SignIn = () => {
 								<button type="button" className="btn btn-secondary btn-floating mx-2">
 									<i className="fab fa-google" />
 								</button>
+							</div>
+							<div className="text-center">
+								<Link to="/forgot-password">Forgot Password?</Link>
 							</div>
 						</form>
 					)}

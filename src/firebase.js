@@ -41,6 +41,17 @@ export const loginUser = async ({ emailAddress, password }) => {
 	})
 }
 
+export const resetPassword = async (email) => {
+	return new Promise(async (resolve, reject) => {
+		try {
+			await firebase.auth().sendPasswordResetEmail(email)
+			resolve(`A link to reset your password has been sent to the email ${email}. \nPlease check your inbox`)
+		} catch (e) {
+			reject(e)
+		}
+	})
+}
+
 export const signOutUser = async () => {
 	return new Promise(async (resolve, reject) => {
 		try {
