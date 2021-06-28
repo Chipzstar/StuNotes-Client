@@ -1,21 +1,29 @@
-import React, { Component } from "react";
-import Notes from '../assets/icons/notebook.svg'
-import Transcribe from '../assets/icons/audio transcription.svg'
-import Collab from '../assets/icons/collaborate.svg'
-import "../stylesheets/App.css";
+import React, { Component } from 'react';
+import Notes from '../assets/svg/notebook.svg';
+import Transcribe from '../assets/svg/audio transcription.svg';
+import Collab from '../assets/svg/collaborate.svg';
+import '../stylesheets/App.css';
+import { Link } from 'react-router-dom';
 
 class Landing extends Component {
 	render() {
 		return (
-			<div className="container-fluid bg-primary flex-1 py-5">
-				<div className="jumbotron py-2 pb-5 px-5">
-					<h1 className="display-3 font-weight-bold">Welcome to StuNotes</h1>
-					<hr className="my-2" />
-					<p className="lead" >
+			<div className='container-fluid bg-primary py-5'>
+				<div className='jumbotron py-2 pb-5 px-5'>
+					<h1 className='display-3 font-weight-bold'>Welcome to StuNotes</h1>
+					<hr className='my-2' />
+					<p className='lead'>
 						A simple application for School / University students to collaborate together on notes
 					</p>
+					<div className='pt-3'>
+						<Link to='/home'>
+							<button className='btn btn-lg btn-secondary text-center text-capitalize'>
+								Go to Dashboard!
+							</button>
+						</Link>
+					</div>
 				</div>
-				<div className="row">
+				<div className='row'>
 					<div className='col-xl-4 col-lg-4 col-md-4 col-sm-12 px-3'>
 						<div className='d-flex flex-row justify-content-center icon-container'>
 							<img

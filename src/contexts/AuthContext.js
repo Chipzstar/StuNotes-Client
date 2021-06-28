@@ -8,16 +8,20 @@ export function useAuth() {
 
 const AuthProvider = ({children}) => {
 	const [currentUser, setCurrentUser] = useState(null)
+	const [loading, setLoading] = useState(true)
 
 	useEffect(() => {
-		const unsubscribe = firebase.auth().onAuthStateChanged(user => setCurrentUser(user))
-		console.log(currentUser)
+		const unsubscribe = firebase.auth().onAuthStateChanged(user => {
+			setCurrentUser(user)
+			setLoading(false)
+		})
+		console.log("Current user:", currentUser)
 		return unsubscribe
 	}, [currentUser]);
 
 	return (
 		<AuthContext.Provider value={currentUser}>
-			{children}
+			{!loading && children}
 		</AuthContext.Provider>
 
 	);

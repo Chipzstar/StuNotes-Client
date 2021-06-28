@@ -14,7 +14,7 @@ class Navbar extends Component {
 
 	render() {
 		return (
-			<nav className="navbar navbar-expand-md navbar-light nav-bg shadow">
+			<nav className="navbar navbar-expand-md navbar-expand-sm navbar-light nav-bg shadow">
 				<div className="container-fluid">
 					<a className="navbar-brand" href="/">
 						<img
@@ -41,11 +41,10 @@ class Navbar extends Component {
 					</button>
 					<div className="collapse navbar-collapse" id="navbarSupportedContent">
 						{/*Left links*/}
-						<ul className="navbar-nav ms-auto mb-2 mb-lg-0">
+						<ul className="navbar-nav ms-auto mb-2 mb-lg-0 d-flex flex-row align-items-center">
 							<li>
-								<NavLink exact to="/login"
-								         className="btn btn-link px-3 me-2 text-decoration-none text-black">
-									Login
+								<NavLink exact to="/login" className="nav-link px-3 me-2 text-decoration-none text-black">
+									<span className="login-nav-link">Login</span>
 								</NavLink>
 							</li>
 							<li>

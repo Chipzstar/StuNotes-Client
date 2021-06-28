@@ -5,6 +5,7 @@ import { SignUpSchema } from "../validation";
 import "../stylesheets/App.css";
 import { registerNewUser } from "../firebase";
 import { useHistory } from 'react-router-dom';
+import { FaFacebookF, FaGoogle } from 'react-icons/fa';
 
 const SignUp = () => {
 	const history = useHistory();
@@ -173,11 +174,16 @@ const SignUp = () => {
 
 							<div className="text-center">
 								<p>or sign up with:</p>
-								<button type="button" className="btn btn-secondary btn-floating mx-1">
-									<i className="fab fa-facebook-f" />
+								<button type='button' className='text-center btn btn-secondary btn-floating mx-2'>
+									<div>
+										<FaFacebookF className="pe-1" size={20} />
+									</div>
 								</button>
-								<button className="btn btn-secondary mx-1 btn-floating" type="button">
-									<i className="fab fa-google" />
+
+								<button type='button' className='btn btn-secondary btn-floating mx-2'>
+									<div className='text-center'>
+										<FaGoogle className="pe-1" size={20} />
+									</div>
 								</button>
 							</div>
 						</form>

@@ -1,7 +1,9 @@
 $theme-colors: (
   "primary": #ff5757,
   "secondary": #3ea2c4,
-  "success": #5cdb95
+  "success": #5cdb95,
+  "info": #00A3FF
 );
 
 @import "../../node_modules/bootstrap/scss/bootstrap";
+@import '../../node_modules/react-pro-sidebar/dist/scss/styles';

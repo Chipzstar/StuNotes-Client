@@ -33,7 +33,6 @@ export const loginUser = async ({ emailAddress, password }) => {
 	return new Promise(async (resolve, reject) => {
 		try {
 			await firebase.auth().signInWithEmailAndPassword(emailAddress, password)
-			console.log(firebase.auth().currentUser)
 			resolve(firebase.auth().currentUser)
 		} catch (e) {
 			reject(e)

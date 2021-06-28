@@ -1,18 +1,14 @@
 import "./stylesheets/App.css";
 import { BrowserRouter as Router } from "react-router-dom";
 // original file
-import routes from "./router";
-import Navbar from "./components/NavBar";
 import AuthProvider from "./contexts/AuthContext";
+import routes from "./router";
 
 function App() {
 	return (
 		<Router>
-			<div className="App">
-				<Navbar />
-			</div>
 			<AuthProvider>
-				<div>
+				<div className="app-container">
 					{routes}
 				</div>
 			</AuthProvider>

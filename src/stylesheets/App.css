@@ -2,14 +2,22 @@
     --PRIMARY: #ff5757;
     --SECONDARY: #3ea2c4;
     --LIGHT-GREY: #d9d9d9;
+    --ADD-BTN: #00A3FF;
     --ERROR: #ff0033;
 }
+.app-container {}
 
-.App {
-
+.fixed-container {
+    overflow-y: hidden;
+    height: 100vh;
 }
+
+.max-container {
+    height: 100vh;
+}
+
 .test1 {
-    border: solid blue 3px;
+    border: solid blue 1px;
 }
 
 .test2 {
@@ -17,7 +25,11 @@
 }
 
 .test3 {
-    border: solid green 1.5cm;
+    border: solid green 3px;
+}
+
+.test4 {
+    border: solid orchid 4px;
 }
 .brand-image {
     margin: 0 10px;
@@ -42,4 +54,50 @@
 .error {
     color: var(--ERROR);
     font-size: 0.9rem;
+}
+
+.sidebar-header-container {
+    text-transform: uppercase;
+    font-weight: bold;
+    font-size: 14px;
+    letter-spacing: 1px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.form-control:valid {
+    background-color:  rgba(186, 186, 186, 0.2)!important;
+}
+
+.login-nav-link {
+    font-size: 1.2em;
+}
+
+.divider {
+    border-top: 1px solid black;
+    margin: 0.5em auto;
+}
+
+.search-input:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+.add-btn {
+    border-width: 1px;
+    border-color:rgba(0,0,0,0.2);
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    border-radius: 50px;
+}
+
+.icon-btn:hover {
+    cursor: pointer;
+}
+
+.tag-input:focus {
+    outline: none
 }
