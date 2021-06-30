@@ -3,7 +3,8 @@ import { Redirect, Route } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 function AuthRoute({ component: Component, exact, strict, path, ...rest }) {
-	const currentUser = useAuth();
+	const currentUser = useAuth()
+	console.log(currentUser)
 	return (
 		<Route
 			exact={exact}

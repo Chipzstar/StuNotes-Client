@@ -10,7 +10,6 @@ import Team from '../assets/svg/team.svg';
 import { useAuth } from '../contexts/AuthContext';
 import '../stylesheets/App.css';
 import { FiSettings } from 'react-icons/all';
-import { Link } from 'react-router-dom';
 
 const SideBar = () => {
 	const user = useAuth();
@@ -62,12 +61,9 @@ const SideBar = () => {
 			</ul>
 			<div className='w-100 my-4'>
 				<hr className='py-2 divider' />
-				<Link to='/settings'>
-					<div className='nav-link align-middle px-0 d-flex flex-row justify-content-center text-decoration-none'>
-						<FiSettings color='grey' size={50} />
-						<span className='ps-4 h1 text-capitalize ms-1 d-none'>Settings</span>
-					</div>
-				</Link>
+				<div className='nav-link align-middle px-0 d-flex flex-row justify-content-center text-decoration-none'>
+					<span className='text-capitalize h5' role="button" onClick={() => signOutUser()}>Sign Out</span>
+				</div>
 			</div>
 		</div>
 	);

@@ -8,7 +8,7 @@ import { Link } from 'react-router-dom';
 class Landing extends Component {
 	render() {
 		return (
-			<div className='container-fluid bg-primary py-5'>
+			<div className='container-fluid bg-primary py-5 text-black'>
 				<div className='jumbotron py-2 pb-5 px-5'>
 					<h1 className='display-3 font-weight-bold'>Welcome to StuNotes</h1>
 					<hr className='my-2' />

@@ -5,5 +5,6 @@ $theme-colors: (
   "info": #00A3FF
 );
 
-@import "../../node_modules/bootstrap/scss/bootstrap";
-@import '../../node_modules/react-pro-sidebar/dist/scss/styles';
+@import "../../node_modules/mdb-ui-kit/src/scss/mdb.core";
+@import "../../node_modules/mdb-ui-kit/src/scss/mdb.free";
+@import "../../node_modules/mdb-ui-kit/src/scss/bootstrap/bootstrap";

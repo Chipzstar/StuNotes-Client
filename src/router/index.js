@@ -8,27 +8,26 @@ import PrivateRoute from "../components/PrivateRoute";
 import ForgotPassword from "../containers/ForgotPassword";
 import Navbar from '../components/NavBar';
 import Settings from '../containers/Settings';
-import AuthRoute from '../components/AuthRoute';
 import TextEditor from '../containers/TextEditor';
 
 let routes = (
 	<Switch>
-		<AuthRoute exact path="/" >
+		<Route exact path="/" >
 			<Navbar/>
 			<Landing/>
-		</AuthRoute>
-		<AuthRoute path="/login" >
+		</Route>
+		<Route path="/login" >
 			<Navbar/>
 			<SignIn/>
-		</AuthRoute>
-		<AuthRoute path="/signup">
+		</Route>
+		<Route path="/signup">
 			<Navbar/>
 			<SignUp/>
-		</AuthRoute>
-		<AuthRoute path="/forgot-password">
+		</Route>
+		<Route path="/forgot-password">
 			<Navbar/>
 			<ForgotPassword/>
-		</AuthRoute>
+		</Route>
 		<PrivateRoute exact path="/home" component={Dashboard}/>
 		<PrivateRoute exact path="/settings" component={Settings}/>
 		<PrivateRoute exact path="/yjs" component={TextEditor} />
