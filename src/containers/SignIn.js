@@ -2,13 +2,15 @@ import React, { useEffect, useRef, useState } from 'react';
 import '../validation';
 import { Link, useHistory } from 'react-router-dom';
 import { Modal } from 'bootstrap';
-import { loginUser } from '../firebase';
+import { fetchNotes, loginUser } from '../firebase';
 import { SignInSchema } from '../validation';
 import { ErrorMessage, Formik } from 'formik';
+import { useNotesStore } from '../store';
 import { FaFacebookF, FaGoogle } from 'react-icons/fa';
 
 const SignIn = () => {
 	const history = useHistory();
+	const { setNotes } = useNotesStore();
 	const [modal, setModal] = useState(false);
 	const [error, setError] = useState(null);
 	const loginAlert = useRef();
@@ -46,7 +48,13 @@ const SignIn = () => {
 					validationSchema={SignInSchema}
 					onSubmit={(values, actions) => {
 						loginUser(values)
-							.then(() => history.push('/home'))
+							.then(({ uid }) => {
+								fetchNotes(uid)
+									.then(notes => {
+										setNotes(notes);
+										history.push('/home');
+									});
+							})
 							.catch(({ message }) => {
 								console.error(message);
 								setError(message);
@@ -97,13 +105,13 @@ const SignIn = () => {
 								<p>or sign in with:</p>
 								<button type='button' className='text-center btn btn-secondary btn-floating mx-2'>
 									<div>
-										<FaFacebookF className="pe-1" size={20} />
+										<FaFacebookF className='pe-1' size={20} />
 									</div>
 								</button>
 
 								<button type='button' className='btn btn-secondary btn-floating mx-2'>
 									<div className='text-center'>
-										<FaGoogle className="pe-1" size={20} />
+										<FaGoogle className='pe-1' size={20} />
 									</div>
 								</button>
 							</div>

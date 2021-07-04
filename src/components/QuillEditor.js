@@ -1,79 +1,144 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
+import PropTypes from 'prop-types';
 import * as Y from 'yjs';
-import { IndexeddbPersistence } from 'y-indexeddb'
-import { WebsocketProvider } from 'y-websocket';
-import { QuillBinding } from 'y-quill';
+import { IndexeddbPersistence } from 'y-indexeddb';
 import Quill from 'quill';
 import QuillCursors from 'quill-cursors';
 import 'quill/dist/quill.snow.css';
+import { WebsocketProvider } from 'y-websocket';
+import { QuillBinding } from 'y-quill';
+import withStore from '../hoc/withStore';
 
 Quill.register('modules/cursors', QuillCursors);
 
-const QuillEditor = ({roomName, placeholder, theme}) => {
-	let quillRef = useRef(null);
+class QuillEditor extends React.Component {
+	constructor(props) {
+		super(props);
+		this.state = {
+			isMounted: null
 
-	const toolbarOptions = [
-		[{font: []}],
-		[
-			{
-				header: [1, 2, 3, 4, false],
-			},
-		],
-		['bold', 'italic', 'underline'],
-		[{script: 'sub'}, {script: 'super'}],
-		[{list: 'ordered'}, {list: 'bullet'}, {indent: '-1'}, {indent: '+1'}],
-		[{align: []}],
-		['blockquote', 'code-block', 'link', 'image', 'video'],
-		['clean'],
-	]
+		};
+		this.binding = null
+		this.quill = null
+		this.wsProvider = null
+		this.awareness = null
+	}
 
-	useEffect(() => {
-		const yDoc = new Y.Doc();
-		const persistence = new IndexeddbPersistence(roomName, yDoc)
+	componentDidMount() {
+		const { room } = this.props;
+		//this.persistence = new IndexeddbPersistence(room, yDoc);
+		this.yDoc = new Y.Doc({ guid: room });
+		console.log(this.yDoc)
 
-		const wsProvider = new WebsocketProvider('ws://localhost:1234', roomName, yDoc); // change to 'ws://localhost:3000'
-		// for local development
+		this.yText = this.yDoc.getText('quill');
+		console.log(this.yText)
 
-		const yText = yDoc.getText('quill');
+		this.bindEditor(this.yText, room, this.yDoc)
 
-		const editor = new Quill(document.querySelector('#editor'), {
-			modules: {
-				cursors: true,
-				toolbar: toolbarOptions,
-				history: {
-					// Local undo shouldn't undo changes
-					// from remote users
-					userOnly: true,
-				},
-			},
-			placeholder,
-			theme, // 'bubble' is also great
+		this.yText.observe(event => {
+			console.log('delta:', event.changes.delta);
 		});
 
-		const binding = new QuillBinding(yText, editor, wsProvider.awareness);
+		/*
+		this.persistence.on('synced', () => console.log('initial content loaded'));
+		*/
+		this.wsProvider.on('status', event => {
+			console.log(event.status);
+		});
+		this.wsProvider.on('sync', (isSynced) => console.log(isSynced))
+		window.addEventListener('blur', () => this.quill.blur());
+	}
 
-		persistence.once('synced', () => console.log('initial content loaded'))
+	componentWillUnmount() {
+		//this.persistence.destroy()
+		this.wsProvider.destroy();
+		this.yDoc.destroy()
+	}
 
-		wsProvider.on('status', event => {
-			console.log(event.status)
-		})
-
-		window.addEventListener('blur', () => editor.blur());
-		return () => {
-			binding.destroy()
-			wsProvider.destroy()
+	bindEditor = (yText, room) => {
+		if (this.binding) {
+			this.binding.destroy()
 		}
-	}, []);
+		if (this.quill === null) {
+			this.quill = new Quill(document.querySelector('#editor'), {
+				modules: {
+					cursors: true,
+					toolbar: '#toolbar',
+					history: {
+						// Local undo shouldn't undo changes
+						// from remote users
+						userOnly: true
+					}
+				},
+				placeholder: 'Write something here...',
+				theme: 'snow' // 'bubble' is also great
+			});
+		}
+		this.wsProvider = new WebsocketProvider('ws://localhost:1234', room, this.yDoc); // change to
+		this.binding = new QuillBinding(this.yText, this.quill, this.wsProvider.awareness)
+	}
 
-	// const insertText = () => {
-	// 	var range = quillRef.getSelection();
-	// 	let position = range ? range.index : 0;
-	// 	quill.insertText(position, 'Hello, World! ');
-	// };
+	render() {
+		return (
+			<div>
+				<div id='toolbar' className="border-0">
+				<span className='ql-formats'>
+					<select className='ql-font' />
+					<select defaultValue={''} onChange={e => e.persist()} className='ql-header'>
+						<option value='1' />
+						<option value='2' />
+						<option value='3' />
+						<option value='false' />
+					</select>
+				</span>
+					<span className='ql-formats'>
+					<button className='ql-bold' />
+					<button className='ql-italic' />
+					<button className='ql-underline' />
+					<button className='ql-strike' />
+				</span>
+					<span className='ql-formats'>
+			      <select className='ql-color' />
+			      <select className='ql-background' />
+			    </span>
+					<span className='ql-formats'>
+			      <button className='ql-script' value='sub' />
+			      <button className='ql-script' value='super' />
+			    </span>
+					<span className='ql-formats'>
+			      <button className='ql-header' value='1' />
+			      <button className='ql-header' value='2' />
+			      <button className='ql-blockquote' />
+			      <button className='ql-code-block' />
+			    </span>
+					<span className='ql-formats'>
+			      <button className='ql-list' value='ordered' />
+			      <button className='ql-list' value='bullet' />
+			      <button className='ql-indent' value='-1' />
+			      <button className='ql-indent' value='+1' />
+			    </span>
+					<span className='ql-formats'>
+			      <button className='ql-direction' value='rtl' />
+			      <select className='ql-align' />
+			    </span>
+					<span className='ql-formats'>
+			      <button className='ql-link' />
+			      <button className='ql-image' />
+			      <button className='ql-video' />
+			      <button className='ql-formula' />
+			    </span>
+					<span className='ql-formats'>
+			      <button className='ql-clean' />
+			    </span>
+				</div>
+				<div id='editor' className='text-editor border-0'/>
+			</div>
+		);
+	}
+}
 
-	return (
-		<div id='editor' className="text-editor"/>
-	);
+QuillEditor.propTypes = {
+	room: PropTypes.string.isRequired
 };
 
-export default QuillEditor;
+export default withStore(QuillEditor);

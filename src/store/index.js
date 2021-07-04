@@ -1,55 +1,38 @@
 import create from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
+import { noteSchema } from '../schemas';
 
-let msgStore = (set) => ({
-	msg: '',
-	setMessage: (msg) => set(state => ({
-		...state,
-		msg
+let notesStore = (set, get) => ({
+	notes: [],
+	addNote: (id, title, author) => set(state => ({
+		notes: [...state.notes, {
+			...noteSchema,
+			id,
+			author,
+			title
+		}]
+	})),
+	setNotes: (notes) => set(state => {
+		return { notes }
+	}),
+	removeNote: (id) => set(state => {
+		let targetIndex = state.notes.findIndex(item => item.id === id);
+		return { notes: state.notes.filter((item, index) => index !== targetIndex) };
+	}),
+	clearNotes: () => set(state => ({
+		notes: []
+	})),
+	updateDeltas: (id, deltas) => set(state => ({
+		notes: state.notes.map(item => item.id === id ? { ...item, deltas } : item)
 	}))
 });
 
-let documentStore = (set) => ({
-	content: "",
-	setContent: (content) => set(state => ({
-		...state,
-		content
-	}))
-})
-
-let fileStore = (set) => ({
-	files: [],
-	addFile: (file) => set(state => ({
-		files: [...state.files, file]
-	}))
-})
-
-export const useMsgStore = create(
+export const useNotesStore = create(
 	persist(
 		devtools(
-			msgStore
+			notesStore
 		), {
-			name: "messages"
+			name: 'notes'
 		}
 	)
 );
-
-export const useDocumentStore = create(
-	persist(
-		devtools(
-			documentStore
-		), {
-			name: "documents"
-		}
-	)
-)
-
-export const useFilesStore = create(
-	persist(
-		devtools(
-			fileStore
-		), {
-			name: "files"
-		}
-	)
-)

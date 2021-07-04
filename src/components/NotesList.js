@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
+import { useNotesStore } from '../store';
 import '../stylesheets/App.css';
 
-const NotesList = ({ documents, onSelect }) => {
-	const [activeIndex, setActive] = useState(null);
+const NotesList = ({ onSelect, newIndex }) => {
+	const { notes } = useNotesStore()
+	const [activeIndex, setActive] = useState(newIndex);
 
 	const activeDoc = classNames({
 		'list-group-item': true,
@@ -19,33 +21,35 @@ const NotesList = ({ documents, onSelect }) => {
 		'list-group-item': true,
 		'list-group-item-action': true,
 		'flex-column': true,
-		'align-items-start': true
+		'align-items-start': true,
 	});
+
 	return (
-		<div className='list-group overflow-y-scroll max-container'>
-			{documents.map(({ title, description, author, createdAt }, index) => {
+		<div className='list-group overflow-y-scroll max-container w-100'>
+			{notes.map(({ id, title, description, author, createdAt }, index) => {
+				//console.log("Doc", index, "=>", id)
 				return index === activeIndex ?
 					(
-						<a key={index} href='#' className={activeDoc} onClick={() => setActive(index)}>
+						<div key={index} className={activeDoc} onClick={() => setActive(index)} role="button">
 							<div className='d-flex w-100 justify-content-between'>
 								<h5 className='mb-1'>{title}</h5>
 								<small>{createdAt}</small>
 							</div>
 							<p className='mb-1'>{description}</p>
 							<small>{author}</small>
-						</a>
+						</div>
 					) : (
-						<a key={index} href='#' className={inactiveDoc} onClick={() => {
+						<div key={index} className={inactiveDoc} onClick={() => {
 							setActive(index);
-							onSelect(title, author);
-						}}>
+							onSelect(id, title, author);
+						}} role="button">
 							<div className='d-flex w-100 justify-content-between'>
 								<h5 className='mb-1'>{title}</h5>
 								<small>{createdAt}</small>
 							</div>
 							<p className='mb-1'>{description}</p>
 							<small>{author}</small>
-						</a>
+						</div>
 					);
 			})}
 		</div>
@@ -53,7 +57,6 @@ const NotesList = ({ documents, onSelect }) => {
 };
 
 NotesList.propTypes = {
-	documents: PropTypes.array.isRequired,
 	onSelect: PropTypes.func.isRequired
 };
 
