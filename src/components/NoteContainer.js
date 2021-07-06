@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import document from '../assets/svg/document.svg';
 import tag from '../assets/svg/price-tag.svg';
@@ -7,8 +7,8 @@ import upload from '../assets/svg/cloud-upload.svg';
 import QuillEditor from './QuillEditor';
 import { useNotesStore } from '../store';
 
-const NoteContainer = ({ author, roomId, title, onTitleChange, newNote }) => {
-	const { notes } = useNotesStore()
+const NoteContainer = ({ status, author, noteId, title, onTitleChange, onDescriptionChange, newNote }) => {
+	const { notes } = useNotesStore(useCallback(state => state, [noteId]));
 
 	return (
 		<div className='container-fluid flex-column text-center pb-3'>
@@ -42,7 +42,7 @@ const NoteContainer = ({ author, roomId, title, onTitleChange, newNote }) => {
 				</div>
 			</div>
 			{Object.keys(notes).length ? (
-				<div className="d-flex flex-column">
+				<div className='d-flex flex-column'>
 					<div className='d-flex flex-row align-items-center justify-content-between px-2 pt-2'>
 						{/*TODO - check styling*/}
 						<div>
@@ -55,24 +55,28 @@ const NoteContainer = ({ author, roomId, title, onTitleChange, newNote }) => {
 								className='h1 fw-bold border-0 borderless'
 							/>
 						</div>
+						<div className="test1">
+							<span className="text-muted font-italic">{status}</span>
+						</div>
 						<div>
 							<span>Author: <span className='font-weight-bold'>{author}</span></span>
 						</div>
 					</div>
 					<hr className='border-2' />
 					<div>
-						<QuillEditor room={roomId}/>
+						<QuillEditor room={noteId} onChange={onDescriptionChange}/>
 					</div>
 				</div>
 			) : (
 				<div className='d-flex min-vh-100 flex-column justify-content-center align-items-center mx-auto py-3'>
-					<div className="d-grid gap-2 d-md-block">
+					<div className='d-grid gap-2 d-md-block'>
 						<button className='btn btn-info big-btn' onClick={newNote}>
 							Create your first note
 						</button>
 					</div>
 					<div className='py-5'>
-						<p className="text-muted display-6">In future click the blue button at the top left to create new notes</p>
+						<p className='text-muted display-6'>In future click the blue button at the top left to create
+							new notes</p>
 					</div>
 				</div>
 			)}
@@ -83,9 +87,10 @@ const NoteContainer = ({ author, roomId, title, onTitleChange, newNote }) => {
 NoteContainer.propTypes = {
 	title: PropTypes.string.isRequired,
 	author: PropTypes.string.isRequired,
-	roomId: PropTypes.string.isRequired,
+	noteId: PropTypes.string.isRequired,
 	onSave: PropTypes.func.isRequired,
 	onTitleChange: PropTypes.func.isRequired,
+	onDescriptionChange: PropTypes.func.isRequired,
 	newNote: PropTypes.func.isRequired
 };
 

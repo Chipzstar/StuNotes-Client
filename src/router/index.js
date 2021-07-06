@@ -29,6 +29,7 @@ let routes = (
 			<ForgotPassword/>
 		</Route>
 		<PrivateRoute exact path="/home" component={Dashboard}/>
+		<PrivateRoute path="/home/:id" component={Dashboard}/>
 		<PrivateRoute exact path="/settings" component={Settings}/>
 		<PrivateRoute exact path="/yjs" component={TextEditor} />
 		<Route exact path="*" component={ErrorPage}/>

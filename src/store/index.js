@@ -22,8 +22,8 @@ let notesStore = (set, get) => ({
 	clearNotes: () => set(state => ({
 		notes: []
 	})),
-	updateDeltas: (id, deltas) => set(state => ({
-		notes: state.notes.map(item => item.id === id ? { ...item, deltas } : item)
+	updateMetaInfo: (id, data) => set(state => ({
+		notes: state.notes.map(item => item.id === id ? { ...item, ...data } : item)
 	}))
 });
 

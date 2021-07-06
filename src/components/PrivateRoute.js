@@ -9,7 +9,7 @@ function PrivateRoute({ component: Component, exact, strict, path, ...rest }) {
 			exact={exact}
 			strict={strict}
 			path={path}
-			render={props => currentUser ? <Component {...props} {...rest} /> : <Redirect to='login' />
+			render={props => currentUser ? <Component {...props} {...rest} /> : <Redirect to='/login' />
 			}>
 		</Route>
 	);

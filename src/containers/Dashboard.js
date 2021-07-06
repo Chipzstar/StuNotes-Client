@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import SideBar from '../components/SideBar';
 import DashboardNav from '../components/DashboardNav';
 import { VscCalendar } from 'react-icons/vsc';
@@ -8,98 +8,84 @@ import NotesList from '../components/NotesList';
 import { useAuth } from '../contexts/AuthContext';
 import '../stylesheets/App.css';
 import NoteContainer from '../components/NoteContainer';
-import documents from '../constants/Documents';
 import * as Y from 'yjs';
-import { useYDoc, useYArray } from 'zustand-yjs';
+import { useYArray, useYDoc } from 'zustand-yjs';
 import { useNotesStore } from '../store';
-import { uuid } from 'uuidv4';
-import { createNote } from '../firebase';
-
-//refs
-let quill = null
-let binding = null
-let wsProvider = null
-let awareness = null
+import { createNote, updateNote } from '../firebase';
+import { v4 as uuidv4 } from 'uuid';
+import { useParams } from 'react-router-dom';
+import debounce from 'lodash.debounce';
 
 const connectDoc = (doc) => {
 	console.log('connected to a provider with room', doc.guid)
 	return () => console.log('disconnected', doc.guid)
 }
 
-const Dashboard = () => {
+const Dashboard = props => {
 	const user = useAuth()
-
+	const { id:ID } = useParams()
 	const yDoc = useYDoc(user.uid, connectDoc);
-	const yDocList = yDoc.getArray("notes")
+	const yDocList = yDoc.getArray("notes");
 	const { data, push } = useYArray(yDocList);
-	const { notes, addNote, updateDeltas } = useNotesStore();
-	const [noteCount, setNoteCount] = useState(0);
-	const [title, setTitle] = useState('Untitled Note');
-	const [author, setAuthor] = useState("unnamed");
-	const [roomId, setRoomId] = useState(user.uid);
+	const { notes, addNote, updateMetaInfo } = useNotesStore();
+	const [noteCount, setNoteCount] = useState(notes.length);
+	const [title, setTitle] = useState(notes.length ? notes[0].title : 'Untitled');
+	const [author, setAuthor] = useState(user.displayName);
+	const [noteId, setNoteId] = useState(notes.length ? notes[0].id : user.uid);
+	const [status, setStatus] = useState("All changes saved");
+
+	const debouncedChangeHandler = useCallback(debounce((id, data) => {
+		console.log("debouncing...")
+		update(id, data).then(() => setStatus("All changes saved"))
+	}, 2000), []);
 
 	useEffect(() => {
-		console.log(user.uid)
+		console.count("Dashboard - ON")
+		if (notes.length && ID === undefined) {
+			console.count("OPENING FIRST NOTE")
+			props.history.push(`/home/${noteId}`)
+		}
 	}, []);
 
-	/*const bindEditor = (yText, room, doc) => {
-		if (binding) {
-			binding.destroy()
-		}
-		if (quill === null) {
-			quill = new Quill(document.querySelector('#editor'), {
-				modules: {
-					cursors: true,
-					toolbar: '#toolbar',
-					history: {
-						// Local undo shouldn't undo changes
-						// from remote users
-						userOnly: true
-					}
-				},
-				placeholder: 'Write something here...',
-				theme: 'snow' // 'bubble' is also great
-			});
-		}
-		wsProvider = new WebsocketProvider('ws://localhost:1234', room, doc); // change to
-		awareness = wsProvider.awareness
-		binding = new QuillBinding(yText, quill, awareness)
-	}*/
-
-	const openNote = (index) => {
-		let note = notes[index]
-		console.log("Note:", note)
-	}
+	useEffect(() => {
+		setNoteCount(notes.length)
+	}, [notes]);
 
 	async function createNewNote() {
-		let id = uuid()
-		addNote(id, title, author)
+		let id = uuidv4()
+		setNoteId(id)
+		setTitle("Untitled")
+		addNote(id, "Untitled", author)
 		let newNote = new Y.Text()
-		newNote.applyDelta([{ insert: `Document #${noteCount}` }, { insert: '\n', attributes: { header: 1 } }, { insert: '\n' }])
 		console.log(newNote)
 		push([newNote])
-		updateDeltas(id, newNote.toDelta())
-		await createNote(user.uid, id, title, author)
+		await createNote(user.uid, id, "Untitled", author)
+		setNoteCount(prevState => prevState + 1)
+		props.history.push(`/home/${id}`)
 	}
 
 	const handleSaveNote = () => {}
 
 	const handleDocSelection = (docId, title, author) => {
-		setRoomId(docId)
+		setNoteId(docId)
 		setTitle(title)
 		setAuthor(author)
+		props.history.push(`/home/${docId}`)
 	}
 
 	const handleTitle = (e) => {
+		setStatus("Saving...")
 		const { value } = e.target;
 		setTitle(value);
+		updateMetaInfo(noteId, {title: value})
+		debouncedChangeHandler(noteId, {title: value})
 	};
 
-	useEffect(() => {
-		if (user) {
-			setAuthor(user.displayName)
-		}
-	}, []);
+	async function update(id, data) {
+		console.table({ ...data });
+		let result = await updateNote(user.uid, id, data);
+		console.log(result);
+	}
 
 	return (
 		<div className='container-fluid fixed-container'>
@@ -122,16 +108,18 @@ const Dashboard = () => {
 							</div>
 						</div>
 						<div className='d-flex flex-grow-1'>
-							<NotesList documents={documents} onSelect={handleDocSelection} newIndex={notes.length - 1}/>
+							<NotesList uid={user.uid} onSelect={handleDocSelection}/>
 						</div>
 					</div>
 				</div>
 				<div className='col py-3'>
 					<NoteContainer
+						status={status}
 						author={author}
-						roomId={roomId}
+						noteId={noteId}
 						title={title}
 						onTitleChange={handleTitle}
+						onDescriptionChange={debouncedChangeHandler}
 						onSave={handleSaveNote}
 						newNote={createNewNote}
 					/>

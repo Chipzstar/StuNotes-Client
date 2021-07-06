@@ -2,21 +2,22 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import * as Y from 'yjs';
 import { IndexeddbPersistence } from 'y-indexeddb';
+import 'quill/dist/quill.snow.css';
 import Quill from 'quill';
 import QuillCursors from 'quill-cursors';
-import 'quill/dist/quill.snow.css';
 import { WebsocketProvider } from 'y-websocket';
 import { QuillBinding } from 'y-quill';
 import withStore from '../hoc/withStore';
+import { AuthContext } from '../contexts/AuthContext';
 
 Quill.register('modules/cursors', QuillCursors);
 
 class QuillEditor extends React.Component {
+	static contextType = AuthContext
 	constructor(props) {
 		super(props);
 		this.state = {
 			isMounted: null
-
 		};
 		this.binding = null
 		this.quill = null
@@ -27,32 +28,60 @@ class QuillEditor extends React.Component {
 	componentDidMount() {
 		const { room } = this.props;
 		//this.persistence = new IndexeddbPersistence(room, yDoc);
-		this.yDoc = new Y.Doc({ guid: room });
+		this.yDoc = new Y.Doc({ guid: this.context.uid });
 		console.log(this.yDoc)
 
 		this.yText = this.yDoc.getText('quill');
 		console.log(this.yText)
 
 		this.bindEditor(this.yText, room, this.yDoc)
-
-		this.yText.observe(event => {
-			console.log('delta:', event.changes.delta);
-		});
-
 		/*
 		this.persistence.on('synced', () => console.log('initial content loaded'));
 		*/
-		this.wsProvider.on('status', event => {
-			console.log(event.status);
-		});
-		this.wsProvider.on('sync', (isSynced) => console.log(isSynced))
+		this.initObservers(room)
 		window.addEventListener('blur', () => this.quill.blur());
+	}
+
+	shouldComponentUpdate(nextProps, nextState, nextContext) {
+		if (this.props.room !== nextProps.room){
+			this.resetYDoc(nextProps.room)
+			return true
+		}
+		return false
 	}
 
 	componentWillUnmount() {
 		//this.persistence.destroy()
 		this.wsProvider.destroy();
-		this.yDoc.destroy()
+		this.yDoc.destroy();
+	}
+
+	initObservers(room) {
+		this.yText.observe(() => {
+			let text = this.quill.getText()
+			if (text.length === 100){
+				this.props.store.updateMetaInfo(room, {description: text.padEnd(103, "...")})
+				this.props.onChange(room, {description: text.padEnd(103, "...")})
+			} else if (text.length < 100) {
+				this.props.store.updateMetaInfo(room, {description: text})
+				this.props.onChange(room, {description: text})
+			}
+		})
+
+		this.wsProvider.on('status', event => {
+			console.log(event.status);
+		});
+
+		this.wsProvider.on('sync', (isSynced) => console.log(isSynced))
+	}
+
+	resetYDoc = (room) => {
+		this.wsProvider.destroy();
+		this.yDoc = new Y.Doc({ guid: this.context.uid });
+		this.yText = this.yDoc.getText('quill');
+		//console.count("BINDING TO EDITOR")
+		this.bindEditor(this.yText, room, this.yDoc)
+		this.initObservers(room)
 	}
 
 	bindEditor = (yText, room) => {

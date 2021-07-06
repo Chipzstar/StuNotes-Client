@@ -82,6 +82,32 @@ export const createNote = async (uid, id, title, author) => {
 	});
 };
 
+export const updateNote = async(uid, docId, data) => {
+	return new Promise(async (resolve, reject) => {
+		try {
+			const Ref = db.collection(`root/${uid}/notes`);
+			await Ref.doc(docId).update({
+				...data
+			})
+			resolve("Note Updated!");
+		} catch (err) {
+			reject(err);
+		}
+	});
+}
+
+export const deleteNote = async(uid, docId) => {
+	return new Promise(async (resolve, reject) => {
+		try {
+			const Ref = db.collection(`root/${uid}/notes`);
+			await Ref.doc(docId).delete()
+			resolve("Note Deleted!");
+		} catch (err) {
+			reject(err);
+		}
+	});
+}
+
 export const fetchNotes = async (uid) => {
 	return new Promise(async (resolve, reject) => {
 		try {

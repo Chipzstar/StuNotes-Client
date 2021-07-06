@@ -1,5 +1,5 @@
 import React from 'react';
-import { Dropdown } from 'react-bootstrap-v5';
+import { Dropdown } from 'react-bootstrap';
 import defaultProfile from '../assets/images/default profile.png';
 import { signOutUser } from '../firebase';
 import Notes from '../assets/svg/document.svg';
