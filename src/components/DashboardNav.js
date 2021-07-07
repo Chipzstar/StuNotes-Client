@@ -8,7 +8,7 @@ const DashboardNav = ({onSearch, newNote}) => {
 	return (
 		<div className='d-flex flex-row align-items-center px-2 py-3'>
 			<IoMdMenu size={35} />
-			<SearchBar onSearch={onSearch}/>
+			<   SearchBar onSearch={onSearch}/>
 			<NewNoteBtn newNote={newNote} />
 		</div>
 	);

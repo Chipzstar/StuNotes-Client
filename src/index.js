@@ -1,3 +1,4 @@
+import 'bootstrap';
 import 'bootstrap/dist/js/bootstrap.bundle.min';
 import 'mdb-ui-kit/css/mdb.min.css';
 import "./stylesheets/main.css";

@@ -6,7 +6,6 @@ import { RiBookletLine } from 'react-icons/ri';
 import { AiOutlineSortAscending } from 'react-icons/ai';
 import NotesList from '../components/NotesList';
 import { useAuth } from '../contexts/AuthContext';
-import '../stylesheets/App.css';
 import NoteContainer from '../components/NoteContainer';
 import * as Y from 'yjs';
 import { useYArray, useYDoc } from 'zustand-yjs';
@@ -15,6 +14,7 @@ import { createNote, updateNote } from '../firebase';
 import { v4 as uuidv4 } from 'uuid';
 import { useParams } from 'react-router-dom';
 import debounce from 'lodash.debounce';
+import '../stylesheets/App.css';
 
 const connectDoc = (doc) => {
 	console.log('connected to a provider with room', doc.guid);
@@ -30,6 +30,7 @@ const Dashboard = props => {
 	const { notes, addNote, updateMetaInfo } = useNotesStore();
 	const [noteCount, setNoteCount] = useState(notes.length);
 	const [filteredNotes, filterNotes] = useState(notes);
+	const [sortOrder, setSort] = useState("default")
 	const [query, setQuery] = useState('');
 	const [title, setTitle] = useState(notes.length ? notes[0].title : 'Untitled');
 	const [author, setAuthor] = useState(user.displayName);
@@ -42,7 +43,7 @@ const Dashboard = props => {
 	const debouncedSearch = useMemo(() => debounce(val =>
 			filterNotes(prevState => {
 				return val.length === 0 ?
-					notes : val.length > 2 ?
+					notes : val.length >= 2 ?
 						notes.filter(item => item.title.toLowerCase().includes(val.toLowerCase())) : prevState;
 			}), 400),
 		[]);
@@ -78,6 +79,33 @@ const Dashboard = props => {
 		setQuery(value);
 		debouncedSearch(value);
 	};
+
+	const toggleSort = () => {
+		console.log("sorting...")
+		if (sortOrder === "desc") {
+			setSort("asc")
+			filteredNotes.sort((a, b) => {
+				if (a.title > b.title) {
+					return -1
+				} else if (b.title > a.title) {
+					return 1
+				} else {
+					return 0
+				}
+			})
+		} else {
+			setSort("desc")
+			filteredNotes.sort((a, b) => {
+				if (a.title < b.title) {
+					return -1
+				} else if (b.title < a.title) {
+					return 1
+				} else {
+					return 0
+				}
+			})
+		}
+	}
 
 	const handleDocSelection = (docId, title, author) => {
 		setNoteId(docId);
@@ -121,8 +149,12 @@ const Dashboard = props => {
 									className='text-center text-capitalize lead font-weight-bold'>All Notes - {noteCount}</span>
 							</div>
 							<div className='d-flex flex-grow-0 align-items-center justify-content-center'>
-								<VscCalendar size={25} className='me-2' />
-								<AiOutlineSortAscending size={25} />
+								<div role="button" onClick={() => console.count("Calendar")}>
+									<VscCalendar size={25} className='me-2' />
+								</div>
+								<div role="button" onClick={toggleSort}>
+									<AiOutlineSortAscending size={25} />
+								</div>
 							</div>
 						</div>
 						<div className='d-flex flex-grow-1'>

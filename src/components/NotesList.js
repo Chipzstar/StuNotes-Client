@@ -5,9 +5,10 @@ import classNames from 'classnames';
 import { useNotesStore } from '../store';
 import { useParams } from 'react-router-dom';
 import logo from '../assets/images/logo.png';
-import Toast  from 'react-bootstrap/Toast';
+import Toast from 'react-bootstrap/Toast';
 import ToastContainer from 'react-bootstrap/ToastContainer';
 import { deleteNote } from '../firebase';
+import '../stylesheets/App.css';
 
 const NotesList = ({ uid, filteredNotes, onSelect }) => {
 	let { id: docId } = useParams();
@@ -46,7 +47,7 @@ const NotesList = ({ uid, filteredNotes, onSelect }) => {
 						<button type='button' className='btn bg-primary text-black fw-bold' data-bs-dismiss='modal'
 						        onClick={async () => {
 							        removeNote(docId);
-							        await deleteNote(uid, docId)
+							        await deleteNote(uid, docId);
 							        setShow(true);
 						        }}>Yes
 						</button>
@@ -68,13 +69,13 @@ const NotesList = ({ uid, filteredNotes, onSelect }) => {
 	);
 
 	return (
-		<div className='list-group overflow-y-scroll max-container w-100'>
+		<div className='list-group overflow-y-scroll max-container'>
 			{alertMessage}
 			{filteredNotes.map(({ id, title, description, author, createdAt }, index) => {
 				//console.log("Doc", index, "=>", id)
 				return id === docId ?
 					(
-						<div key={index} className={activeDoc}>
+						<a key={index} className={activeDoc}>
 							<div className='d-flex w-100 justify-content-between'>
 								<h5 className='mb-1'>{title}</h5>
 								<small>{createdAt}</small>
@@ -86,9 +87,9 @@ const NotesList = ({ uid, filteredNotes, onSelect }) => {
 									<Trash width={25} height={25} fill={'white'} />
 								</div>
 							</div>
-						</div>
+						</a>
 					) : (
-						<div key={index} className={inactiveDoc} onClick={() => {
+						<a key={index} className={inactiveDoc} onClick={() => {
 							onSelect(id, title, author);
 						}}>
 							<div className='d-flex w-100 justify-content-between'>
@@ -96,10 +97,8 @@ const NotesList = ({ uid, filteredNotes, onSelect }) => {
 								<small>{createdAt}</small>
 							</div>
 							<p className='mb-1'>{description}</p>
-							<div className='d-flex flex-row justify-content-between'>
-								<small>{author}</small>
-							</div>
-						</div>
+							<small>{author}</small>
+						</a>
 					);
 			})}
 			{toastConfirmation}
