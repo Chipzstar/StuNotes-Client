@@ -8,6 +8,7 @@ import Team from '../assets/svg/team.svg';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotesStore } from '../store';
 import '../stylesheets/App.css';
+import { Link } from 'react-router-dom';
 
 const SideBar = () => {
 	const user = useAuth();
@@ -38,10 +39,10 @@ const SideBar = () => {
 			<ul className='nav nav-pills flex-column mb-sm-auto mb-0 align-items-center'
 			    id='menu'>
 				<li className='nav-item mt-4'>
-					<a href='#' className='nav-link align-middle px-0 d-flex flex-row justify-content-center'>
+					<Link to="/home" className='nav-link align-middle px-0 d-flex flex-row justify-content-center'>
 						<img src={Notes} alt='' width={50} height={50} className='img-fluid' />
 						<span className='ps-4 h1 text-capitalize ms-1 d-none'>Notes</span>
-					</a>
+					</Link>
 				</li>
 				<li className='nav-item mt-4'>
 					<a href='#'

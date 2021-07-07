@@ -7,13 +7,12 @@ import { useParams } from 'react-router-dom';
 import logo from '../assets/images/logo.png';
 import Toast  from 'react-bootstrap/Toast';
 import ToastContainer from 'react-bootstrap/ToastContainer';
-import '../stylesheets/App.css';
 import { deleteNote } from '../firebase';
 
-const NotesList = ({ uid, onSelect }) => {
+const NotesList = ({ uid, filteredNotes, onSelect }) => {
 	let { id: docId } = useParams();
 	const [showToast, setShow] = useState(false);
-	const { notes, removeNote } = useNotesStore(useCallback(state => state, [docId]));
+	const { removeNote } = useNotesStore(useCallback(state => state, [docId]));
 
 	const activeDoc = classNames({
 		'list-group-item': true,
@@ -71,7 +70,7 @@ const NotesList = ({ uid, onSelect }) => {
 	return (
 		<div className='list-group overflow-y-scroll max-container w-100'>
 			{alertMessage}
-			{notes.map(({ id, title, description, author, createdAt }, index) => {
+			{filteredNotes.map(({ id, title, description, author, createdAt }, index) => {
 				//console.log("Doc", index, "=>", id)
 				return id === docId ?
 					(
@@ -109,6 +108,7 @@ const NotesList = ({ uid, onSelect }) => {
 };
 
 NotesList.propTypes = {
+	uid: PropTypes.string.isRequired,
 	onSelect: PropTypes.func.isRequired
 };
 

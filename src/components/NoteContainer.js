@@ -55,7 +55,7 @@ const NoteContainer = ({ status, author, noteId, title, onTitleChange, onDescrip
 								className='h1 fw-bold border-0 borderless'
 							/>
 						</div>
-						<div className="test1">
+						<div>
 							<span className="text-muted font-italic">{status}</span>
 						</div>
 						<div>
@@ -88,7 +88,6 @@ NoteContainer.propTypes = {
 	title: PropTypes.string.isRequired,
 	author: PropTypes.string.isRequired,
 	noteId: PropTypes.string.isRequired,
-	onSave: PropTypes.func.isRequired,
 	onTitleChange: PropTypes.func.isRequired,
 	onDescriptionChange: PropTypes.func.isRequired,
 	newNote: PropTypes.func.isRequired

@@ -59,10 +59,12 @@ class QuillEditor extends React.Component {
 	initObservers(room) {
 		this.yText.observe(() => {
 			let text = this.quill.getText()
-			if (text.length === 100){
+			let index = this.props.store.notes.findIndex(item => item.id === room)
+
+			if (text.length === 100 && this.props.store.notes[index]['description'] !== text){
 				this.props.store.updateMetaInfo(room, {description: text.padEnd(103, "...")})
 				this.props.onChange(room, {description: text.padEnd(103, "...")})
-			} else if (text.length < 100) {
+			} else if (text.length < 100 && this.props.store.notes[index]['description'] !== text) {
 				this.props.store.updateMetaInfo(room, {description: text})
 				this.props.onChange(room, {description: text})
 			}
@@ -71,8 +73,7 @@ class QuillEditor extends React.Component {
 		this.wsProvider.on('status', event => {
 			console.log(event.status);
 		});
-
-		this.wsProvider.on('sync', (isSynced) => console.log(isSynced))
+		this.wsProvider.on('sync', (isSynced) => console.log(isSynced ? "synced" : "not synced"))
 	}
 
 	resetYDoc = (room) => {

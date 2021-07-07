@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import SideBar from '../components/SideBar';
 import DashboardNav from '../components/DashboardNav';
 import { VscCalendar } from 'react-icons/vsc';
@@ -17,69 +17,87 @@ import { useParams } from 'react-router-dom';
 import debounce from 'lodash.debounce';
 
 const connectDoc = (doc) => {
-	console.log('connected to a provider with room', doc.guid)
-	return () => console.log('disconnected', doc.guid)
-}
+	console.log('connected to a provider with room', doc.guid);
+	return () => console.log('disconnected', doc.guid);
+};
 
 const Dashboard = props => {
-	const user = useAuth()
-	const { id:ID } = useParams()
+	const user = useAuth();
+	const { id: ID } = useParams();
 	const yDoc = useYDoc(user.uid, connectDoc);
-	const yDocList = yDoc.getArray("notes");
+	const yDocList = yDoc.getArray('notes');
 	const { data, push } = useYArray(yDocList);
 	const { notes, addNote, updateMetaInfo } = useNotesStore();
 	const [noteCount, setNoteCount] = useState(notes.length);
+	const [filteredNotes, filterNotes] = useState(notes);
+	const [query, setQuery] = useState('');
 	const [title, setTitle] = useState(notes.length ? notes[0].title : 'Untitled');
 	const [author, setAuthor] = useState(user.displayName);
 	const [noteId, setNoteId] = useState(notes.length ? notes[0].id : user.uid);
-	const [status, setStatus] = useState("All changes saved");
+	const [status, setStatus] = useState('All changes saved');
 
-	const debouncedChangeHandler = useCallback(debounce((id, data) => {
-		console.log("debouncing...")
-		update(id, data).then(() => setStatus("All changes saved"))
-	}, 2000), []);
+	const debouncedChangeHandler = useMemo(() => debounce((id, data) =>
+		update(id, data).then(() => setStatus('All changes saved')), 2000), []);
+
+	const debouncedSearch = useMemo(() => debounce(val =>
+			filterNotes(prevState => {
+				return val.length === 0 ?
+					notes : val.length > 2 ?
+						notes.filter(item => item.title.toLowerCase().includes(val.toLowerCase())) : prevState;
+			}), 400),
+		[]);
 
 	useEffect(() => {
-		console.count("Dashboard - ON")
+		console.count('Dashboard - ON');
 		if (notes.length && ID === undefined) {
-			console.count("OPENING FIRST NOTE")
-			props.history.push(`/home/${noteId}`)
+			console.count('OPENING FIRST NOTE');
+			props.history.push(`/home/${noteId}`);
 		}
+		return () => debouncedChangeHandler.cancel();
 	}, []);
 
 	useEffect(() => {
-		setNoteCount(notes.length)
+		setNoteCount(notes.length);
+		filterNotes(notes);
 	}, [notes]);
 
 	async function createNewNote() {
-		let id = uuidv4()
-		setNoteId(id)
-		setTitle("Untitled")
-		addNote(id, "Untitled", author)
-		let newNote = new Y.Text()
-		console.log(newNote)
-		push([newNote])
-		await createNote(user.uid, id, "Untitled", author)
-		setNoteCount(prevState => prevState + 1)
-		props.history.push(`/home/${id}`)
+		let id = uuidv4();
+		setNoteId(id);
+		setTitle('Untitled');
+		addNote(id, 'Untitled', author);
+		let newNote = new Y.Text();
+		console.log(newNote);
+		push([newNote]);
+		await createNote(user.uid, id, 'Untitled', author);
+		props.history.push(`/home/${id}`);
 	}
 
-	const handleSaveNote = () => {}
+	const handleSearch = (e) => {
+		let { value } = e.target;
+		setQuery(value);
+		debouncedSearch(value);
+	};
 
 	const handleDocSelection = (docId, title, author) => {
-		setNoteId(docId)
-		setTitle(title)
-		setAuthor(author)
-		props.history.push(`/home/${docId}`)
-	}
+		setNoteId(docId);
+		setTitle(title);
+		setAuthor(author);
+		props.history.push(`/home/${docId}`);
+	};
 
 	const handleTitle = (e) => {
-		setStatus("Saving...")
+		setStatus('Saving...');
 		const { value } = e.target;
 		setTitle(value);
-		updateMetaInfo(noteId, {title: value})
-		debouncedChangeHandler(noteId, {title: value})
+		updateMetaInfo(noteId, { title: value });
+		debouncedChangeHandler(noteId, { title: value });
 	};
+
+	function handleDescription(id, data) {
+		setStatus('Saving...');
+		debouncedChangeHandler(noteId, data);
+	}
 
 	async function update(id, data) {
 		console.table({ ...data });
@@ -95,7 +113,7 @@ const Dashboard = props => {
 				</div>
 				<div className='col-sm-4 col-md-4 col-xl-3 px-0 bg-light'>
 					<div className='d-flex flex-column pt-2 text-dark min-vh-100'>
-						<DashboardNav newNote={createNewNote}/>
+						<DashboardNav onSearch={handleSearch} newNote={createNewNote} />
 						<div className='d-flex flex-row align-items-center justify-content-around px-3 py-3'>
 							<div className='d-flex flex-grow-1 align-items-center'>
 								<RiBookletLine size={25} className='me-3' />
@@ -108,19 +126,18 @@ const Dashboard = props => {
 							</div>
 						</div>
 						<div className='d-flex flex-grow-1'>
-							<NotesList uid={user.uid} onSelect={handleDocSelection}/>
+							<NotesList uid={user.uid} filteredNotes={filteredNotes} onSelect={handleDocSelection} />
 						</div>
 					</div>
 				</div>
 				<div className='col py-3'>
 					<NoteContainer
+						noteId={noteId}
 						status={status}
 						author={author}
-						noteId={noteId}
 						title={title}
 						onTitleChange={handleTitle}
-						onDescriptionChange={debouncedChangeHandler}
-						onSave={handleSaveNote}
+						onDescriptionChange={handleDescription}
 						newNote={createNewNote}
 					/>
 				</div>
