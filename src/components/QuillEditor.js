@@ -161,7 +161,7 @@ class QuillEditor extends React.Component {
 			      <button className='ql-clean' />
 			    </span>
 				</div>
-				<div id='editor' className='text-editor border-0'/>
+				<div id='editor' className='text-editor border-0' style={{fontSize: "120%"}}/>
 			</div>
 		);
 	}

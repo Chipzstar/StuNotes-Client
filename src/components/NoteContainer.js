@@ -1,14 +1,22 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useState } from 'react';
 import PropTypes from 'prop-types';
 import document from '../assets/svg/document.svg';
-import tag from '../assets/svg/price-tag.svg';
+import priceTag from '../assets/svg/price-tag.svg';
 import share from '../assets/svg/share.svg';
 import upload from '../assets/svg/cloud-upload.svg';
 import QuillEditor from './QuillEditor';
 import { useNotesStore } from '../store';
+import Tag from './Tag';
 
-const NoteContainer = ({ status, author, noteId, title, onTitleChange, onDescriptionChange, newNote }) => {
+const NoteContainer = ({ status, author, noteId, title, tags, onTitleChange, onDescriptionChange, onNewTag, onRemoveTag, newNote }) => {
 	const { notes } = useNotesStore(useCallback(state => state, [noteId]));
+	const [tag, setTag] = useState('');
+
+	const handleTag = useCallback(
+		(e) => {
+			let { value } = e.target;
+			setTag(value);
+		}, []);
 
 	return (
 		<div className='container-fluid flex-column text-center pb-3'>
@@ -19,20 +27,27 @@ const NoteContainer = ({ status, author, noteId, title, onTitleChange, onDescrip
 						<span className='lead font-weight-bold ps-3'>All Notes</span>
 					</div>
 					<div className='d-flex flex-row align-items-center'>
-						<img src={tag} width={25} height={25} alt='' />
-						<form>
+						<img src={priceTag} width={25} height={25} alt='' />
+						<form onSubmit={(event) => {
+							onNewTag(event, tag)
+							setTag("")
+						}}>
 							<input
+								placeholder='Add Tags'
 								name='tag'
 								type='text'
-								onSubmit={(e) => {
-									e.preventDefault();
-									console.log('Hello');
-								}}
-								placeholder='Add Tags'
 								className='lead text-muted ps-3 border-0 borderless'
+								onChange={handleTag}
+								value={tag}
+								disabled={tags.length >= 5}
 							/>
 						</form>
 					</div>
+				</div>
+				<div id="tag-container" className='d-flex flex-grow-1 flex-wrap mx-2'>
+					<ul id="tags" className="d-flex flex-wrap mt-2">
+						{tags.map((item) => <Tag name={item} remove={onRemoveTag}/>)}
+					</ul>
 				</div>
 				<div>
 					<div>
@@ -56,7 +71,7 @@ const NoteContainer = ({ status, author, noteId, title, onTitleChange, onDescrip
 							/>
 						</div>
 						<div>
-							<span className="text-muted font-italic">{status}</span>
+							<span className='text-muted font-italic'>{status}</span>
 						</div>
 						<div>
 							<span>Author: <span className='font-weight-bold'>{author}</span></span>
@@ -64,7 +79,7 @@ const NoteContainer = ({ status, author, noteId, title, onTitleChange, onDescrip
 					</div>
 					<hr className='border-2' />
 					<div>
-						<QuillEditor room={noteId} onChange={onDescriptionChange}/>
+						<QuillEditor room={noteId} onChange={onDescriptionChange} />
 					</div>
 				</div>
 			) : (
@@ -85,11 +100,14 @@ const NoteContainer = ({ status, author, noteId, title, onTitleChange, onDescrip
 };
 
 NoteContainer.propTypes = {
+	noteId: PropTypes.string.isRequired,
 	title: PropTypes.string.isRequired,
 	author: PropTypes.string.isRequired,
-	noteId: PropTypes.string.isRequired,
+	tags: PropTypes.array.isRequired,
 	onTitleChange: PropTypes.func.isRequired,
 	onDescriptionChange: PropTypes.func.isRequired,
+	onNewTag: PropTypes.func.isRequired,
+	onRemoveTag: PropTypes.func.isRequired,
 	newNote: PropTypes.func.isRequired
 };
 

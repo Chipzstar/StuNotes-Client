@@ -72,7 +72,7 @@ const NotesList = ({ uid, filteredNotes, onSelect }) => {
 	return (
 		<div className='list-group overflow-y-scroll max-container w-100'>
 			{alertMessage}
-			{filteredNotes.map(({ id, title, description, author, createdAt }, index) => {
+			{filteredNotes.map(({ id, title, description, author, createdAt, tags }, index) => {
 				//console.log("Doc", index, "=>", id)
 				return id === docId ?
 					(
@@ -91,7 +91,7 @@ const NotesList = ({ uid, filteredNotes, onSelect }) => {
 						</a>
 					) : (
 						<a key={index} className={inactiveDoc} onClick={() => {
-							onSelect(id, title, author);
+							onSelect(id, title, author, tags);
 						}}>
 							<div className='d-flex w-100 justify-content-between'>
 								<h5 className='mb-1'>{title}</h5>

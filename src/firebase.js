@@ -114,11 +114,39 @@ export const fetchNotes = async (uid) => {
 			const Ref = db.collection(`root/${uid}/notes`);
 			const snapshot = await Ref.get();
 			let notes = snapshot.docs.map(doc => {
-				let { title, author, createdAt, description, deltas } = doc.data();
-				createdAt = createdAt.toDate().toDateString();
-				return { id: doc.id, title, author, createdAt, description, deltas };
+				let { title, author, createdAt, description, tags } = doc.data();
+				createdAt = createdAt.toDate()
+				return { id: doc.id, title, author, createdAt, description, tags };
 			});
 			resolve(notes);
+		} catch (err) {
+			reject(err);
+		}
+	});
+};
+
+export const createTag = async (uid, docId, tag) => {
+	return new Promise(async (resolve, reject) => {
+		try {
+			const Ref = db.doc(`root/${uid}/notes/${docId}`);
+			await Ref.update({
+				tags: firebase.firestore.FieldValue.arrayUnion(tag)
+			})
+			resolve("New tag added")
+		} catch (err) {
+			reject(err);
+		}
+	});
+};
+
+export const deleteTag = async (uid, docId, tag) => {
+	return new Promise(async (resolve, reject) => {
+		try {
+			const Ref = db.doc(`root/${uid}/notes/${docId}`);
+			await Ref.update({
+				tags: firebase.firestore.FieldValue.arrayRemove(tag)
+			})
+			resolve("Tag removed")
 		} catch (err) {
 			reject(err);
 		}

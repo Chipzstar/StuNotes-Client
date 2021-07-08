@@ -108,3 +108,19 @@
     min-height: 500px;
 }
 
+#tag-container {
+    min-height: 50px;
+}
+
+/*#tag-container:focus-within {*/
+/*     border: 1px solid #0052cc;*/
+/*}*/
+
+.tag {
+    width: auto;
+    height: 32px;
+    list-style: none;
+    border-radius: 6px;
+}
+
+

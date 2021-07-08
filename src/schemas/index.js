@@ -4,5 +4,5 @@ export const noteSchema = {
 	author: "",
 	description: "",
 	title: 'Untitled',
-	deltas: []
+	tags: []
 }

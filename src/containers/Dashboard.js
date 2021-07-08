@@ -16,7 +16,7 @@ import { Modal } from 'bootstrap';
 //hooks
 import { useYArray, useYDoc } from 'zustand-yjs';
 import { useNotesStore } from '../store';
-import { createNote, updateNote } from '../firebase';
+import { createNote, createTag, updateNote, deleteTag } from '../firebase';
 import { v4 as uuidv4 } from 'uuid';
 import { useParams } from 'react-router-dom';
 //styles
@@ -34,13 +34,14 @@ const Dashboard = props => {
 	const yDoc = useYDoc(user.uid, connectDoc);
 	const yDocList = yDoc.getArray('notes');
 	const { data, push } = useYArray(yDocList);
-	const { notes, addNote, updateMetaInfo } = useNotesStore();
+	const { notes, addNote, updateMetaInfo, addTag, removeTag } = useNotesStore();
 	const [noteCount, setNoteCount] = useState(notes.length);
-	const [filteredNotes, filterNotes] = useState(notes);
+	const [filteredNotes, setFilteredNotes] = useState(notes);
 	const [sortOrder, setSort] = useState('default');
 	const [title, setTitle] = useState(notes.length ? notes[0].title : 'Untitled');
 	const [author, setAuthor] = useState(user.displayName);
 	const [noteId, setNoteId] = useState(notes.length ? notes[0].id : user.uid);
+	const [tags, setTags] = useState(notes.length ? notes[0].tags : [])
 	const [status, setStatus] = useState('All changes saved');
 	const [date, setDate] = useState(new Date());
 	const [modal, setShowModal] = useState(false);
@@ -50,7 +51,7 @@ const Dashboard = props => {
 		update(id, data).then(() => setStatus('All changes saved')), 2000), []);
 
 	const debouncedSearch = useMemo(() => debounce(val =>
-			filterNotes(prevState => {
+			setFilteredNotes(prevState => {
 				return val.length === 0 ?
 					notes : val.length >= 2 ?
 						notes.filter(item => item.title.toLowerCase().includes(val.toLowerCase())) : prevState;
@@ -60,7 +61,7 @@ const Dashboard = props => {
 	useEffect(() => {
 		setShowModal(new Modal(calendarModal.current));
 		if (notes.length && ID === undefined) {
-			console.count('OPENING FIRST NOTE');
+			console.log('OPENING FIRST NOTE');
 			props.history.push(`/home/${noteId}`);
 		}
 		return () => debouncedChangeHandler.cancel();
@@ -68,8 +69,12 @@ const Dashboard = props => {
 
 	useEffect(() => {
 		setNoteCount(notes.length);
-		filterNotes(notes);
+		setFilteredNotes(notes);
 	}, [notes]);
+
+	useEffect(() => {
+		console.log(tags)
+	}, [tags]);
 
 	async function createNewNote() {
 		let id = uuidv4();
@@ -99,10 +104,11 @@ const Dashboard = props => {
 		}
 	};
 
-	const handleDocSelection = (docId, title, author) => {
+	const handleDocSelection = (docId, title, author, tags) => {
 		setNoteId(docId);
 		setTitle(title);
 		setAuthor(author);
+		setTags(tags);
 		props.history.push(`/home/${docId}`);
 	};
 
@@ -121,7 +127,25 @@ const Dashboard = props => {
 
 	const handleDateChange = (date) => {
 		setDate(date)
-		filterNotes(prevState => notes.filter(item => moment(item.createdAt).isSameOrBefore(date)))
+		setFilteredNotes(prevState => notes.filter(item => moment(item.createdAt).isSameOrBefore(date)))
+	}
+
+	const handleNewTag = async (e) => {
+		e.preventDefault();
+		let { value } = e.target.elements[0]
+		setTags(prevState => {
+			addTag(noteId, value);
+			createTag(user.uid, noteId, value);
+			return [...prevState, value]
+		})
+	}
+
+	const handleRemoveTag = async (tagName) => {
+		setTags(prevState => {
+			removeTag(noteId, tagName)
+			deleteTag(user.uid, noteId, tagName)
+			return prevState.filter(item => item !== tagName)
+		})
 	}
 
 	async function update(id, data) {
@@ -174,13 +198,17 @@ const Dashboard = props => {
 				</div>
 				<div className='col py-3'>
 					<NoteContainer
+						uid={user.uid}
 						noteId={noteId}
 						status={status}
 						author={author}
 						title={title}
+						tags={tags}
 						onTitleChange={handleTitle}
 						onDescriptionChange={handleDescription}
+						onNewTag={handleNewTag}
 						newNote={createNewNote}
+					    onRemoveTag={handleRemoveTag}
 					/>
 				</div>
 			</div>

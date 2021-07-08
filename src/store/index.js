@@ -24,6 +24,12 @@ let notesStore = (set, get) => ({
 	})),
 	updateMetaInfo: (id, data) => set(state => ({
 		notes: state.notes.map(item => item.id === id ? { ...item, ...data } : item)
+	})),
+	addTag: (id, tag) => set(state => ({
+		notes: state.notes.map(item => item.id === id ? { ...item, tags: [...item.tags, tag] } : item)
+	})),
+	removeTag: (id, tag) => set(state => ({
+		notes: state.notes.map(item => item.id === id ? { ...item, tags: item.tags.filter(t => t !== tag) } : item)
 	}))
 });
 
