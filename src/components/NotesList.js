@@ -9,6 +9,7 @@ import Toast from 'react-bootstrap/Toast';
 import ToastContainer from 'react-bootstrap/ToastContainer';
 import { deleteNote } from '../firebase';
 import '../stylesheets/App.css';
+import moment from 'moment';
 
 const NotesList = ({ uid, filteredNotes, onSelect }) => {
 	let { id: docId } = useParams();
@@ -69,7 +70,7 @@ const NotesList = ({ uid, filteredNotes, onSelect }) => {
 	);
 
 	return (
-		<div className='list-group overflow-y-scroll max-container'>
+		<div className='list-group overflow-y-scroll max-container w-100'>
 			{alertMessage}
 			{filteredNotes.map(({ id, title, description, author, createdAt }, index) => {
 				//console.log("Doc", index, "=>", id)
@@ -78,7 +79,7 @@ const NotesList = ({ uid, filteredNotes, onSelect }) => {
 						<a key={index} className={activeDoc}>
 							<div className='d-flex w-100 justify-content-between'>
 								<h5 className='mb-1'>{title}</h5>
-								<small>{createdAt}</small>
+								<small>{moment(createdAt).fromNow()}</small>
 							</div>
 							<p className='mb-1'>{description}</p>
 							<div className='d-flex flex-row justify-content-between'>
@@ -94,7 +95,7 @@ const NotesList = ({ uid, filteredNotes, onSelect }) => {
 						}}>
 							<div className='d-flex w-100 justify-content-between'>
 								<h5 className='mb-1'>{title}</h5>
-								<small>{createdAt}</small>
+								<small>{moment(createdAt).fromNow()}</small>
 							</div>
 							<p className='mb-1'>{description}</p>
 							<small>{author}</small>

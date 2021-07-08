@@ -1,20 +1,27 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import * as Y from 'yjs';
+import moment from 'moment';
+import debounce from 'lodash.debounce';
+//components
+import NotesList from '../components/NotesList';
+import NoteContainer from '../components/NoteContainer';
 import SideBar from '../components/SideBar';
 import DashboardNav from '../components/DashboardNav';
 import { VscCalendar } from 'react-icons/vsc';
 import { RiBookletLine } from 'react-icons/ri';
 import { AiOutlineSortAscending } from 'react-icons/ai';
-import NotesList from '../components/NotesList';
-import { useAuth } from '../contexts/AuthContext';
-import NoteContainer from '../components/NoteContainer';
-import * as Y from 'yjs';
+import Calendar from 'react-calendar';
+import { Modal } from 'bootstrap';
+//hooks
 import { useYArray, useYDoc } from 'zustand-yjs';
 import { useNotesStore } from '../store';
 import { createNote, updateNote } from '../firebase';
 import { v4 as uuidv4 } from 'uuid';
 import { useParams } from 'react-router-dom';
-import debounce from 'lodash.debounce';
+//styles
 import '../stylesheets/App.css';
+import 'react-calendar/dist/Calendar.css';
 
 const connectDoc = (doc) => {
 	console.log('connected to a provider with room', doc.guid);
@@ -30,12 +37,14 @@ const Dashboard = props => {
 	const { notes, addNote, updateMetaInfo } = useNotesStore();
 	const [noteCount, setNoteCount] = useState(notes.length);
 	const [filteredNotes, filterNotes] = useState(notes);
-	const [sortOrder, setSort] = useState("default")
-	const [query, setQuery] = useState('');
+	const [sortOrder, setSort] = useState('default');
 	const [title, setTitle] = useState(notes.length ? notes[0].title : 'Untitled');
 	const [author, setAuthor] = useState(user.displayName);
 	const [noteId, setNoteId] = useState(notes.length ? notes[0].id : user.uid);
 	const [status, setStatus] = useState('All changes saved');
+	const [date, setDate] = useState(new Date());
+	const [modal, setShowModal] = useState(false);
+	const calendarModal = useRef();
 
 	const debouncedChangeHandler = useMemo(() => debounce((id, data) =>
 		update(id, data).then(() => setStatus('All changes saved')), 2000), []);
@@ -49,7 +58,7 @@ const Dashboard = props => {
 		[]);
 
 	useEffect(() => {
-		console.count('Dashboard - ON');
+		setShowModal(new Modal(calendarModal.current));
 		if (notes.length && ID === undefined) {
 			console.count('OPENING FIRST NOTE');
 			props.history.push(`/home/${noteId}`);
@@ -76,36 +85,19 @@ const Dashboard = props => {
 
 	const handleSearch = (e) => {
 		let { value } = e.target;
-		setQuery(value);
 		debouncedSearch(value);
 	};
 
 	const toggleSort = () => {
-		console.log("sorting...")
-		if (sortOrder === "desc") {
-			setSort("asc")
-			filteredNotes.sort((a, b) => {
-				if (a.title > b.title) {
-					return -1
-				} else if (b.title > a.title) {
-					return 1
-				} else {
-					return 0
-				}
-			})
+		console.log('sorting...');
+		if (sortOrder === 'desc') {
+			setSort('asc');
+			filteredNotes.sort((a, b) => a.title > b.title ? -1 : b.title > a.title ? 1 : 0);
 		} else {
-			setSort("desc")
-			filteredNotes.sort((a, b) => {
-				if (a.title < b.title) {
-					return -1
-				} else if (b.title < a.title) {
-					return 1
-				} else {
-					return 0
-				}
-			})
+			setSort('desc');
+			filteredNotes.sort((a, b) => a.title < b.title ? -1 : b.title < a.title ? 1 : 0);
 		}
-	}
+	};
 
 	const handleDocSelection = (docId, title, author) => {
 		setNoteId(docId);
@@ -122,9 +114,14 @@ const Dashboard = props => {
 		debouncedChangeHandler(noteId, { title: value });
 	};
 
-	function handleDescription(id, data) {
+	const handleDescription = (id, data) => {
 		setStatus('Saving...');
 		debouncedChangeHandler(noteId, data);
+	}
+
+	const handleDateChange = (date) => {
+		setDate(date)
+		filterNotes(prevState => notes.filter(item => moment(item.createdAt).isSameOrBefore(date)))
 	}
 
 	async function update(id, data) {
@@ -133,8 +130,21 @@ const Dashboard = props => {
 		console.log(result);
 	}
 
+	const calendarPicker = (
+		<div className='modal fade show' ref={calendarModal} tabIndex='-1' aria-hidden='true'>
+			<div className='modal-dialog modal-dialog-centered'>
+				<div className='modal-content d-flex align-items-center justify-content-center bg-transparent border-0'>
+					<div className='modal-body'>
+						<Calendar onChange={handleDateChange} value={date}/>
+					</div>
+				</div>
+			</div>
+		</div>
+	);
+
 	return (
 		<div className='container-fluid fixed-container'>
+			{calendarPicker}
 			<div className='row flex-nowrap'>
 				<div className='col-sm-2 col-md-1 col-xl-1 px-sm-2 px-0 bg-light'>
 					<SideBar />
@@ -149,10 +159,10 @@ const Dashboard = props => {
 									className='text-center text-capitalize lead font-weight-bold'>All Notes - {noteCount}</span>
 							</div>
 							<div className='d-flex flex-grow-0 align-items-center justify-content-center'>
-								<div role="button" onClick={() => console.count("Calendar")}>
+								<div role='button' onClick={() => modal.show()}>
 									<VscCalendar size={25} className='me-2' />
 								</div>
-								<div role="button" onClick={toggleSort}>
+								<div role='button' onClick={toggleSort}>
 									<AiOutlineSortAscending size={25} />
 								</div>
 							</div>

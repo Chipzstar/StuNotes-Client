@@ -8,7 +8,6 @@ import PrivateRoute from "../components/PrivateRoute";
 import ForgotPassword from "../containers/ForgotPassword";
 import Navbar from '../components/NavBar';
 import Settings from '../containers/Settings';
-import TextEditor from '../containers/TextEditor';
 
 let routes = (
 	<Switch>
@@ -31,7 +30,6 @@ let routes = (
 		<PrivateRoute exact path="/home" component={Dashboard}/>
 		<PrivateRoute path="/home/:id" component={Dashboard}/>
 		<PrivateRoute exact path="/settings" component={Settings}/>
-		<PrivateRoute exact path="/yjs" component={TextEditor} />
 		<Route exact path="*" component={ErrorPage}/>
 	</Switch>
 );

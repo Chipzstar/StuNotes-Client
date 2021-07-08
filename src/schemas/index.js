@@ -1,6 +1,6 @@
 export const noteSchema = {
 	id: "",
-	createdAt: new Date().toDateString(),
+	createdAt: new Date(),
 	author: "",
 	description: "",
 	title: 'Untitled',
