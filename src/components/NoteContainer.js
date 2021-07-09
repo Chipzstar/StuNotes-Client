@@ -33,7 +33,7 @@ const NoteContainer = ({ status, author, noteId, title, tags, onTitleChange, onD
 							setTag("")
 						}}>
 							<input
-								placeholder='Add Tags'
+								placeholder='Press enter to add tags'
 								name='tag'
 								type='text'
 								className='lead text-muted ps-3 border-0 borderless'
@@ -46,7 +46,7 @@ const NoteContainer = ({ status, author, noteId, title, tags, onTitleChange, onD
 				</div>
 				<div id="tag-container" className='d-flex flex-grow-1 flex-wrap mx-2'>
 					<ul id="tags" className="d-flex flex-wrap mt-2">
-						{tags.map((item) => <Tag name={item} remove={onRemoveTag}/>)}
+						{tags.map((item, index) => <Tag key={index} name={item} remove={onRemoveTag}/>)}
 					</ul>
 				</div>
 				<div>

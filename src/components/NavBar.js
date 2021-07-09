@@ -16,7 +16,7 @@ class Navbar extends Component {
 		return (
 			<nav className="navbar navbar-expand-md navbar-expand-sm navbar-light nav-bg shadow">
 				<div className="container-fluid">
-					<a className="navbar-brand" href="/">
+					<NavLink to="/" className="navbar-brand" href="/">
 						<img
 							src={logo}
 							alt="StuNotes"
@@ -24,10 +24,10 @@ class Navbar extends Component {
 							width={60}
 							className="d-inline-block align-text-top mx-3"
 						/>
-						<NavLink to="/" className="text-dark text-decoration-none">
+						<div className="text-dark text-decoration-none">
 							<h1>StuNotes</h1>
-						</NavLink>
-					</a>
+						</div>
+					</NavLink>
 					<button
 						className="navbar-toggler"
 						type="button"

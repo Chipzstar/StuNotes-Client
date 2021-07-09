@@ -1,20 +1,28 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { ReactComponent as Trash } from '../assets/svg/trash.svg';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
-import { useNotesStore } from '../store';
-import { useParams } from 'react-router-dom';
+import moment from 'moment';
 import logo from '../assets/images/logo.png';
 import Toast from 'react-bootstrap/Toast';
 import ToastContainer from 'react-bootstrap/ToastContainer';
+import { useNotesStore } from '../store';
+import { useParams } from 'react-router-dom';
 import { deleteNote } from '../firebase';
-import '../stylesheets/App.css';
-import moment from 'moment';
+import { Scrollbars } from 'react-custom-scrollbars';
+import { useMeasure } from 'react-use';
 
 const NotesList = ({ uid, filteredNotes, onSelect }) => {
 	let { id: docId } = useParams();
 	const [showToast, setShow] = useState(false);
 	const { removeNote } = useNotesStore(useCallback(state => state, [docId]));
+	const [divRef1, { height:outerDivHeight }] = useMeasure();
+	const [divRef2, { height:innerDivHeight }] = useMeasure();
+
+	useEffect(() => {
+		console.log("outer div:", outerDivHeight);
+		console.log("inner div:", innerDivHeight);
+	}, [docId]);
 
 	const activeDoc = classNames({
 		'list-group-item': true,
@@ -60,7 +68,7 @@ const NotesList = ({ uid, filteredNotes, onSelect }) => {
 
 	const toastConfirmation = (
 		<ToastContainer position='bottom-end'>
-			<Toast onClose={() => setShow(false)} show={showToast} delay={3000} autohide>
+			<Toast onClose={() => setShow(false)} show={showToast} delay={2000} autohide>
 				<Toast.Header closeButton={false}>
 					<img src={logo} width={50} height={50} className='rounded me-2' alt='' />
 					<span>Note deleted!</span>
@@ -70,39 +78,43 @@ const NotesList = ({ uid, filteredNotes, onSelect }) => {
 	);
 
 	return (
-		<div className='list-group overflow-y-scroll max-container w-100'>
-			{alertMessage}
-			{filteredNotes.map(({ id, title, description, author, createdAt, tags }, index) => {
-				//console.log("Doc", index, "=>", id)
-				return id === docId ?
-					(
-						<a key={index} className={activeDoc}>
-							<div className='d-flex w-100 justify-content-between'>
-								<h5 className='mb-1'>{title}</h5>
-								<small>{moment(createdAt).fromNow()}</small>
-							</div>
-							<p className='mb-1'>{description}</p>
-							<div className='d-flex flex-row justify-content-between'>
-								<small>{author}</small>
-								<div data-bs-toggle='modal' data-bs-target='#deleteModal' role='button'>
-									<Trash width={25} height={25} fill={'white'} />
-								</div>
-							</div>
-						</a>
-					) : (
-						<a key={index} className={inactiveDoc} onClick={() => {
-							onSelect(id, title, author, tags);
-						}}>
-							<div className='d-flex w-100 justify-content-between'>
-								<h5 className='mb-1'>{title}</h5>
-								<small>{moment(createdAt).fromNow()}</small>
-							</div>
-							<p className='mb-1'>{description}</p>
-							<small>{author}</small>
-						</a>
-					);
-			})}
-			{toastConfirmation}
+		<div ref={divRef1}>
+			<Scrollbars autoHeight autoHeightMin={outerDivHeight} autoHide >
+				<div className='list-group' ref={divRef2}>
+					{alertMessage}
+					{filteredNotes.map(({ id, title, description, author, createdAt, tags }, index) => {
+						//console.log("Doc", index, "=>", id)
+						return id === docId ?
+							(
+								<a key={index} className={activeDoc}>
+									<div className='d-flex w-100 justify-content-between'>
+										<h5 className='mb-1'>{title}</h5>
+										<small>{moment(createdAt).fromNow()}</small>
+									</div>
+									<p className='mb-1'>{description}</p>
+									<div className='d-flex flex-row justify-content-between'>
+										<small>{author}</small>
+										<div data-bs-toggle='modal' data-bs-target='#deleteModal' role='button'>
+											<Trash width={25} height={25} fill={'white'} />
+										</div>
+									</div>
+								</a>
+							) : (
+								<a key={index} className={inactiveDoc} onClick={() => {
+									onSelect(id, title, author, tags);
+								}}>
+									<div className='d-flex w-100 justify-content-between'>
+										<h5 className='mb-1'>{title}</h5>
+										<small>{moment(createdAt).fromNow()}</small>
+									</div>
+									<p className='mb-1'>{description}</p>
+									<small>{author}</small>
+								</a>
+							);
+					})}
+					{toastConfirmation}
+				</div>
+			</Scrollbars>
 		</div>
 	);
 };
