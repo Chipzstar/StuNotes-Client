@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { Link, useParams } from 'react-router-dom';
+import { v4 as uuidv4 } from 'uuid';
 import * as Y from 'yjs';
 import moment from 'moment';
 import debounce from 'lodash.debounce';
@@ -13,12 +15,12 @@ import { RiBookletLine } from 'react-icons/ri';
 import { AiOutlineSortAscending } from 'react-icons/ai';
 import Calendar from 'react-calendar';
 import { Modal } from 'bootstrap';
+import logo from '../assets/images/logo.png';
 //hooks
 import { useYArray, useYDoc } from 'zustand-yjs';
-import { useNotesStore } from '../store';
-import { createNote, createTag, updateNote, deleteTag } from '../firebase';
-import { v4 as uuidv4 } from 'uuid';
-import { useParams } from 'react-router-dom';
+import { useNotesStore, usePreferencesStore } from '../store';
+import { createNote, createTag, deleteTag, updateNote } from '../firebase';
+import { useMeasure } from 'react-use';
 //styles
 import '../stylesheets/App.css';
 import 'react-calendar/dist/Calendar.css';
@@ -30,18 +32,22 @@ const connectDoc = (doc) => {
 
 const Dashboard = props => {
 	const user = useAuth();
-	const { id: ID } = useParams();
+	let { id: ID } = useParams();
 	const yDoc = useYDoc(user.uid, connectDoc);
 	const yDocList = yDoc.getArray('notes');
 	const { data, push } = useYArray(yDocList);
+
 	const { notes, addNote, updateMetaInfo, addTag, removeTag } = useNotesStore();
+	const { sidebarCollapsed } = usePreferencesStore();
+	const [ref, { width: WIDTH }] = useMeasure();
+
 	const [noteCount, setNoteCount] = useState(notes.length);
 	const [filteredNotes, setFilteredNotes] = useState(notes);
 	const [sortOrder, setSort] = useState('default');
 	const [title, setTitle] = useState(notes.length ? notes[0].title : 'Untitled');
 	const [author, setAuthor] = useState(user.displayName);
 	const [noteId, setNoteId] = useState(notes.length ? notes[0].id : user.uid);
-	const [tags, setTags] = useState(notes.length ? notes[0].tags : [])
+	const [tags, setTags] = useState(notes.length ? notes[0].tags : []);
 	const [status, setStatus] = useState('All changes saved');
 	const [date, setDate] = useState(new Date());
 	const [modal, setShowModal] = useState(false);
@@ -68,13 +74,13 @@ const Dashboard = props => {
 	}, []);
 
 	useEffect(() => {
+		console.log(WIDTH);
+	}, [WIDTH]);
+
+	useEffect(() => {
 		setNoteCount(notes.length);
 		setFilteredNotes(notes);
 	}, [notes]);
-
-	useEffect(() => {
-		console.log(tags)
-	}, [tags]);
 
 	async function createNewNote() {
 		let id = uuidv4();
@@ -123,30 +129,30 @@ const Dashboard = props => {
 	const handleDescription = (id, data) => {
 		setStatus('Saving...');
 		debouncedChangeHandler(noteId, data);
-	}
+	};
 
 	const handleDateChange = (date) => {
-		setDate(date)
-		setFilteredNotes(prevState => notes.filter(item => moment(item.createdAt).isSameOrBefore(date)))
-	}
+		setDate(date);
+		setFilteredNotes(prevState => notes.filter(item => moment(item.createdAt).isSameOrBefore(date)));
+	};
 
 	const handleNewTag = async (e) => {
 		e.preventDefault();
-		let { value } = e.target.elements[0]
+		let { value } = e.target.elements[0];
 		setTags(prevState => {
 			addTag(noteId, value);
 			createTag(user.uid, noteId, value);
-			return [...prevState, value]
-		})
-	}
+			return [...prevState, value];
+		});
+	};
 
 	const handleRemoveTag = async (tagName) => {
 		setTags(prevState => {
-			removeTag(noteId, tagName)
-			deleteTag(user.uid, noteId, tagName)
-			return prevState.filter(item => item !== tagName)
-		})
-	}
+			removeTag(noteId, tagName);
+			deleteTag(user.uid, noteId, tagName);
+			return prevState.filter(item => item !== tagName);
+		});
+	};
 
 	async function update(id, data) {
 		console.table({ ...data });
@@ -159,7 +165,7 @@ const Dashboard = props => {
 			<div className='modal-dialog modal-dialog-centered'>
 				<div className='modal-content d-flex align-items-center justify-content-center bg-transparent border-0'>
 					<div className='modal-body'>
-						<Calendar onChange={handleDateChange} value={date}/>
+						<Calendar onChange={handleDateChange} value={date} />
 					</div>
 				</div>
 			</div>
@@ -167,15 +173,36 @@ const Dashboard = props => {
 	);
 
 	return (
-		<div className='container-fluid fixed-container'>
+		<div className='container-fluid fixed-container' ref={ref}>
 			{calendarPicker}
-			<div className='row flex-nowrap'>
-				<div className='col-sm-2 col-md-1 col-xl-1 px-sm-2 px-0 bg-light'>
-					<SideBar />
+			<div id='page-content-wrapper' className='row flex-nowrap'>
+				<div
+					className='offcanvas offcanvas-start'
+					tabIndex='-1'
+					id='offcanvasExample'
+					data-bs-keyboard='false'
+					data-bs-backdrop='false'
+					aria-labelledby='offcanvasExampleLabel'
+					style={{ width: WIDTH / 6}}
+				>
+					<div className='offcanvas-header'>
+						<div className='d-flex align-items-center flex-grow-1'>
+							<Link to='/'>
+								<img src={logo} width={50} height={50} alt='' className='rounded-circle' />
+							</Link>
+							<h4 className='offcanvas-title ps-3' id='offcanvasExampleLabel'>StuNotes</h4>
+						</div>
+						<button type='button' className='btn-close text-reset' data-bs-dismiss='offcanvas'
+						        aria-label='Close' />
+					</div>
+					<div className='d-flex justify-content-center offcanvas-body'>
+						<SideBar />
+					</div>
 				</div>
-				<div className='col-sm-4 col-md-4 col-xl-3 px-0 bg-light'>
+				<div className='col-sm-4 col-md-2 col-xl-3 px-0 bg-light'>
 					<div className='d-flex flex-column pt-2 text-dark min-vh-100'>
-						<DashboardNav onSearch={handleSearch} newNote={createNewNote} />
+						<DashboardNav onSearch={handleSearch} newNote={createNewNote}
+						              isCollapsed={sidebarCollapsed} />
 						<div className='d-flex flex-row align-items-center justify-content-around px-3 py-3'>
 							<div className='d-flex flex-grow-1 align-items-center'>
 								<RiBookletLine size={25} className='me-3' />
@@ -208,7 +235,7 @@ const Dashboard = props => {
 						onDescriptionChange={handleDescription}
 						onNewTag={handleNewTag}
 						newNote={createNewNote}
-					    onRemoveTag={handleRemoveTag}
+						onRemoveTag={handleRemoveTag}
 					/>
 				</div>
 			</div>

@@ -7,37 +7,15 @@ import Trash from '../assets/svg/trash.svg';
 import Team from '../assets/svg/team.svg';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotesStore } from '../store';
-import '../stylesheets/App.css';
 import { Link } from 'react-router-dom';
+import '../stylesheets/App.css';
 
 const SideBar = () => {
 	const user = useAuth();
 	const { clearNotes } = useNotesStore()
 	return (
-		<div className='d-flex flex-column align-items-center px-3 pt-2 text-white min-vh-100'>
-			<Dropdown className='d-flex flex-column align-items-center pb-4'>
-				<Dropdown.Toggle
-					variant='link'
-					size='sm'
-					id='dropdown-basic'
-					className='d-flex flex-column align-items-center bg'
-				>
-					<img src={defaultProfile} alt='profile' width={75} height={60}
-					     className=' mt-3' />
-					<span className='d-none mx-1'>{user.email}</span>
-				</Dropdown.Toggle>
-
-				<Dropdown.Menu>
-					<Dropdown.Item href='#/action-1'>Profile</Dropdown.Item>
-					<Dropdown.Item href='#/action-2'>Settings</Dropdown.Item>
-					<Dropdown.Item href='#/action-4' disabled>
-						<hr className='dropdown-divider' />
-					</Dropdown.Item>
-					<Dropdown.Item onClick={() => signOutUser().then(() => clearNotes())}>Sign out</Dropdown.Item>
-				</Dropdown.Menu>
-			</Dropdown>
-			<ul className='nav nav-pills flex-column mb-sm-auto mb-0 align-items-center'
-			    id='menu'>
+		<div className='d-flex flex-column flex-shrink-0 align-items-center pt-2 text-dark'>
+			<ul className='nav nav-pills flex-column mb-sm-auto mb-auto' id='menu'>
 				<li className='nav-item mt-4'>
 					<Link to="/home" className='nav-link align-middle px-0 d-flex flex-row justify-content-center'>
 						<img src={Notes} alt='' width={50} height={50} className='img-fluid' />
@@ -59,13 +37,29 @@ const SideBar = () => {
 					</a>
 				</li>
 			</ul>
-			<div className='w-100 my-4'>
-				<hr className='py-2 divider' />
-				<div className='nav-link align-middle px-0 d-flex flex-row justify-content-center text-decoration-none'>
-					<span className='text-capitalize h5' role="button" onClick={() => {
-						signOutUser().then(() => clearNotes())
-					}}>Sign Out</span>
-				</div>
+			<div className='w-100 my-3'>
+				<hr className='my-2 divider' />
+				<Dropdown className='d-flex flex-column'>
+					<Dropdown.Toggle
+						drop="up"
+						variant='link'
+						size='sm'
+						id='dropdown-basic'
+						className='d-flex flex-column align-items-center bg'
+					>
+						<img src={defaultProfile} alt='profile' width={75} height={60}
+						     className=' mt-3' />
+						<span className='mx-1'>{user.displayName}</span>
+					</Dropdown.Toggle>
+					<Dropdown.Menu>
+						<Dropdown.Item href='#/action-1'>Profile</Dropdown.Item>
+						<Dropdown.Item href='#/action-2'>Settings</Dropdown.Item>
+						<Dropdown.Item href='#/action-4' disabled>
+							<hr className='dropdown-divider' />
+						</Dropdown.Item>
+						<Dropdown.Item onClick={() => signOutUser().then(() => clearNotes())}>Sign out</Dropdown.Item>
+					</Dropdown.Menu>
+				</Dropdown>
 			</div>
 		</div>
 	);

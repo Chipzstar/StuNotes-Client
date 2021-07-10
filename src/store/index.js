@@ -33,12 +33,29 @@ let notesStore = (set, get) => ({
 	}))
 });
 
+let preferencesStore = (set) => ({
+	sidebarCollapsed: true,
+	toggleSidebarMode: () => set(state => ({
+		sidebarCollapsed: !state.sidebarCollapsed
+	}))
+});
+
 export const useNotesStore = create(
 	persist(
 		devtools(
 			notesStore
 		), {
 			name: 'notes'
+		}
+	)
+);
+
+export const usePreferencesStore = create(
+	persist(
+		devtools(
+			preferencesStore
+		), {
+			name: 'preferences'
 		}
 	)
 );

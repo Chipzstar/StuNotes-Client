@@ -72,7 +72,7 @@ export const createNote = async (uid, id, title, author) => {
 				author,
 				createdAt: new Date(),
 				description: "",
-				deltas: []
+				tags: []
 			})
 			resolve()
 		} catch (e) {

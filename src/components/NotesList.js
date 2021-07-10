@@ -26,6 +26,7 @@ const NotesList = ({ uid, filteredNotes, onSelect }) => {
 
 	const activeDoc = classNames({
 		'list-group-item': true,
+		'rounded-5': true,
 		'list-group-item-action': true,
 		'flex-column': true,
 		'align-items-start': true,
@@ -37,6 +38,7 @@ const NotesList = ({ uid, filteredNotes, onSelect }) => {
 		'list-group-item': true,
 		'list-group-item-action': true,
 		'flex-column': true,
+		'rounded-5': true,
 		'align-items-start': true
 	});
 
@@ -78,7 +80,7 @@ const NotesList = ({ uid, filteredNotes, onSelect }) => {
 	);
 
 	return (
-		<div ref={divRef1}>
+		<div ref={divRef1} className="w-100">
 			<Scrollbars autoHeight autoHeightMin={outerDivHeight} autoHide >
 				<div className='list-group' ref={divRef2}>
 					{alertMessage}
