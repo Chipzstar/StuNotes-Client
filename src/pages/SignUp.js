@@ -7,8 +7,7 @@ import { registerNewUser } from "../firebase";
 import { useHistory } from 'react-router-dom';
 import { FaFacebookF, FaGoogle } from 'react-icons/fa';
 
-const SignUp = () => {
-	const history = useHistory();
+const SignUp = props => {
 	const [modal, setModal] = useState(false)
 	const [error, setError] = useState(null)
 	const myModal = useRef()
@@ -50,7 +49,7 @@ const SignUp = () => {
 					validationSchema={SignUpSchema}
 					onSubmit={(values, actions) => {
 						registerNewUser(values)
-							.then(() => history.push("/home"))
+							.then(() => props.history.push("/home"))
 							.catch(({message} ) => {
 								console.error(message)
 								setError(message)

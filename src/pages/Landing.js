@@ -18,7 +18,7 @@ class Landing extends Component {
 					<div className='pt-3'>
 						<Link to='/home'>
 							<button className='btn btn-lg btn-secondary text-center text-capitalize'>
-								Go to Dashboard!
+								Go to Notebook!
 							</button>
 						</Link>
 					</div>

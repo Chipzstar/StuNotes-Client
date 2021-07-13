@@ -8,14 +8,26 @@ import QuillEditor from './QuillEditor';
 import { useNotesStore } from '../store';
 import Tag from './Tag';
 
-const NoteContainer = ({ status, author, noteId, title, tags, onTitleChange, onDescriptionChange, onNewTag, onRemoveTag, newNote }) => {
-	const { notes } = useNotesStore(useCallback(state => state, [noteId]));
+const NoteContainer = ({
+       notebookName,
+       status,
+       author,
+       noteId,
+       title,
+       tags,
+       onTitleChange,
+       onDescriptionChange,
+       onNewTag,
+       onRemoveTag,
+       newNote
+   }) => {
+	const { allNotes: notes } = useNotesStore(useCallback(state => state, [noteId]));
 	const [tag, setTag] = useState('');
 
 	const handleTag = useCallback(
 		(e) => {
 			let { value } = e.target;
-			setTag(value);
+			setTag(value.toLowerCase());
 		}, []);
 
 	return (
@@ -24,13 +36,13 @@ const NoteContainer = ({ status, author, noteId, title, tags, onTitleChange, onD
 				<div className='d-flex align-items-center'>
 					<div className='d-flex flex-row align-items-center pe-5'>
 						<img src={document} width={25} height={25} alt='' />
-						<span className='lead font-weight-bold ps-3'>All Notes</span>
+						<span className='lead font-weight-bold ps-3'>{notebookName}</span>
 					</div>
 					<div className='d-flex flex-row align-items-center'>
 						<img src={priceTag} width={25} height={25} alt='' />
 						<form onSubmit={(event) => {
-							onNewTag(event, tag)
-							setTag("")
+							onNewTag(event, tag);
+							setTag('');
 						}}>
 							<input
 								placeholder='Press enter to add tags'
@@ -44,9 +56,9 @@ const NoteContainer = ({ status, author, noteId, title, tags, onTitleChange, onD
 						</form>
 					</div>
 				</div>
-				<div id="tag-container" className='d-flex flex-grow-1 flex-wrap mx-2'>
-					<ul id="tags" className="d-flex flex-wrap mt-2">
-						{tags.map((item, index) => <Tag key={index} name={item} remove={onRemoveTag}/>)}
+				<div id='tag-container' className='d-flex flex-grow-1 flex-wrap mx-2'>
+					<ul id='tags' className='d-flex flex-wrap mt-2'>
+						{tags.map((item, index) => <Tag key={index} name={item} remove={onRemoveTag} />)}
 					</ul>
 				</div>
 				<div>

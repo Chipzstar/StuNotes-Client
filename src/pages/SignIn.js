@@ -8,8 +8,7 @@ import { ErrorMessage, Formik } from 'formik';
 import { useNotesStore } from '../store';
 import { FaFacebookF, FaGoogle } from 'react-icons/fa';
 
-const SignIn = () => {
-	const history = useHistory();
+const SignIn = props => {
 	const { setNotes } = useNotesStore();
 	const [modal, setModal] = useState(false);
 	const [error, setError] = useState(null);
@@ -52,7 +51,7 @@ const SignIn = () => {
 								fetchNotes(uid)
 									.then(notes => {
 										setNotes(notes);
-										history.push('/home');
+										props.history.push('/home');
 									});
 							})
 							.catch(({ message }) => {

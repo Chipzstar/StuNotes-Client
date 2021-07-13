@@ -12,17 +12,16 @@ import { deleteNote } from '../firebase';
 import { Scrollbars } from 'react-custom-scrollbars';
 import { useMeasure } from 'react-use';
 
-const NotesList = ({ uid, filteredNotes, onSelect }) => {
-	let { id: docId } = useParams();
+const NoteList = ({ uid, filteredData, onSelect }) => {
+	let { id: ID } = useParams();
 	const [showToast, setShow] = useState(false);
-	const { removeNote } = useNotesStore(useCallback(state => state, [docId]));
+	const { removeNote } = useNotesStore(useCallback(state => state, [ID]));
 	const [divRef1, { height:outerDivHeight }] = useMeasure();
-	const [divRef2, { height:innerDivHeight }] = useMeasure();
+	const [divRef2 ] = useMeasure();
 
 	useEffect(() => {
-		console.log("outer div:", outerDivHeight);
-		console.log("inner div:", innerDivHeight);
-	}, [docId]);
+		console.log("NOTE_ID", ID)
+	}, [ID]);
 
 	const activeDoc = classNames({
 		'list-group-item': true,
@@ -57,8 +56,8 @@ const NotesList = ({ uid, filteredNotes, onSelect }) => {
 						<button type='button' className='btn bg-info text-black' data-bs-dismiss='modal'>No</button>
 						<button type='button' className='btn bg-primary text-black fw-bold' data-bs-dismiss='modal'
 						        onClick={async () => {
-							        removeNote(docId);
-							        await deleteNote(uid, docId);
+							        removeNote(ID);
+							        await deleteNote(uid, ID);
 							        setShow(true);
 						        }}>Yes
 						</button>
@@ -84,9 +83,9 @@ const NotesList = ({ uid, filteredNotes, onSelect }) => {
 			<Scrollbars autoHeight autoHeightMin={outerDivHeight} autoHide >
 				<div className='list-group' ref={divRef2}>
 					{alertMessage}
-					{filteredNotes.map(({ id, title, description, author, createdAt, tags }, index) => {
+					{filteredData.map(({ id, title, description, author, createdAt, tags }, index) => {
 						//console.log("Doc", index, "=>", id)
-						return id === docId ?
+						return id === ID ?
 							(
 								<a key={index} className={activeDoc}>
 									<div className='d-flex w-100 justify-content-between'>
@@ -121,9 +120,10 @@ const NotesList = ({ uid, filteredNotes, onSelect }) => {
 	);
 };
 
-NotesList.propTypes = {
+NoteList.propTypes = {
 	uid: PropTypes.string.isRequired,
-	onSelect: PropTypes.func.isRequired
+	onSelect: PropTypes.func.isRequired,
+	filteredData: PropTypes.array.isRequired
 };
 
-export default NotesList;
+export default NoteList;

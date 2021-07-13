@@ -1,6 +1,7 @@
 import firebase from 'firebase/app';
 import 'firebase/auth';
 import 'firebase/firestore';
+import { groupSchema } from './schemas';
 
 const app = firebase.initializeApp({
 	apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
@@ -149,6 +150,42 @@ export const deleteTag = async (uid, docId, tag) => {
 			resolve("Tag removed")
 		} catch (err) {
 			reject(err);
+		}
+	});
+};
+
+export const createNotebook = async (uid, id, name) => {
+	return new Promise(async (resolve, reject) => {
+		try {
+			const Ref = db.collection(`root/${uid}/notebooks`);
+			await Ref.doc(id).set({
+				name,
+				createdAt: new Date(),
+				notes: [],
+			})
+			resolve()
+		} catch (e) {
+			console.error(e)
+			reject(e)
+		}
+	});
+};
+
+export const createGroup = async (uid, id, name, owner) => {
+	return new Promise(async (resolve, reject) => {
+		try {
+			const Ref = db.collection(`root/${uid}/groups`);
+			await Ref.doc(id).set({
+				name,
+				owner,
+				createdAt: new Date(),
+				notes: [],
+				members: []
+			})
+			resolve()
+		} catch (e) {
+			console.error(e)
+			reject(e)
 		}
 	});
 };
