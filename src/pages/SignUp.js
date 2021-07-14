@@ -1,30 +1,31 @@
-import React, { useEffect, useRef, useState } from "react";
-import { Modal } from "bootstrap";
-import { ErrorMessage, Formik } from "formik";
-import { SignUpSchema } from "../validation";
-import "../stylesheets/App.css";
-import { registerNewUser } from "../firebase";
-import { useHistory } from 'react-router-dom';
+import React, { useEffect, useRef, useState } from 'react';
+import { Modal } from 'bootstrap';
+import { ErrorMessage, Formik } from 'formik';
+import { SignUpSchema } from '../validation';
+import '../stylesheets/App.css';
+import { registerNewUser } from '../firebase';
 import { FaFacebookF, FaGoogle } from 'react-icons/fa';
+import { useNotesStore } from '../store';
 
 const SignUp = props => {
-	const [modal, setModal] = useState(false)
-	const [error, setError] = useState(null)
-	const myModal = useRef()
+	const [modal, setModal] = useState(false);
+	const [error, setError] = useState(null);
+	const { createDefaultNotebook } = useNotesStore();
+	const myModal = useRef();
 
 	useEffect(() => {
-		setModal(new Modal(myModal.current))
-	}, [])
+		setModal(new Modal(myModal.current));
+	}, []);
 
 	const alertMessage = (
-		<div className="modal show" ref={myModal} tabIndex="-1" aria-hidden="true">
-			<div className="modal-dialog">
-				<div className="alert alert-danger">
-					<div className="modal-header">
-						<h5 className="modal-title">Oops!</h5>
-						<button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"/>
+		<div className='modal show' ref={myModal} tabIndex='-1' aria-hidden='true'>
+			<div className='modal-dialog'>
+				<div className='alert alert-danger'>
+					<div className='modal-header'>
+						<h5 className='modal-title'>Oops!</h5>
+						<button type='button' className='btn-close' data-bs-dismiss='modal' aria-label='Close' />
 					</div>
-					<div className="modal-body">
+					<div className='modal-body'>
 						{error}
 					</div>
 				</div>
@@ -33,155 +34,158 @@ const SignUp = props => {
 	);
 
 	return (
-		<div className="py-5 container d-flex flex-column align-items-center">
+		<div className='py-5 container d-flex flex-column align-items-center'>
 			{alertMessage}
-			<h1 className="text-center pb-4">Sign up</h1>
-			<div className="mx-5">
+			<h1 className='text-center pb-4'>Sign up</h1>
+			<div className='mx-5'>
 				<Formik
 					initialValues={{
-						firstName: "",
-						lastName: "",
-						emailAddress: "",
-						password: "",
-						confirmPassword: "",
+						firstName: '',
+						lastName: '',
+						emailAddress: '',
+						password: '',
+						confirmPassword: '',
 						termsOfService: false
 					}}
 					validationSchema={SignUpSchema}
 					onSubmit={(values, actions) => {
 						registerNewUser(values)
-							.then(() => props.history.push("/home"))
-							.catch(({message} ) => {
-								console.error(message)
-								setError(message)
-								modal.show()
+							.then(({ uid, displayName }) => {
+								createDefaultNotebook(uid, displayName);
+								props.history.push('/home');
 							})
+							.catch(({ message }) => {
+								console.error(message);
+								setError(message);
+								modal.show();
+							});
 					}}
 				>
 					{({ handleSubmit, handleChange, handleBlur, touched, errors }) => (
 						<form onSubmit={handleSubmit}>
-							<div className="row mb-4">
-								<div className="col">
-									<div className="form-floating">
+							<div className='row mb-4'>
+								<div className='col'>
+									<div className='form-floating'>
 										<input
-											type="text"
-											name="firstName"
-											id="first-name"
-											className={`form-control ${touched.firstName && errors.firstName && "is-invalid"}`}
+											type='text'
+											name='firstName'
+											id='first-name'
+											className={`form-control ${touched.firstName && errors.firstName && 'is-invalid'}`}
 											onChange={handleChange}
 											onBlur={handleBlur}
 										/>
 										<ErrorMessage
-											name="firstName"
-											render={msg => <span className="error">{msg}</span>}
+											name='firstName'
+											render={msg => <span className='error'>{msg}</span>}
 										/>
-										<label className="form-label" htmlFor="first-name">First name</label>
+										<label className='form-label' htmlFor='first-name'>First name</label>
 									</div>
 								</div>
-								<div className="col">
-									<div className="form-floating">
+								<div className='col'>
+									<div className='form-floating'>
 										<input
-											type="text"
-											name="lastName"
-											id="lastname"
-											className={`form-control ${touched.lastName && errors.lastName && "is-invalid"}`}
+											type='text'
+											name='lastName'
+											id='lastname'
+											className={`form-control ${touched.lastName && errors.lastName && 'is-invalid'}`}
 											onChange={handleChange}
 											onBlur={handleBlur}
 										/>
 										<ErrorMessage
-											name="lastName"
-											render={msg => <span className="error">{msg}</span>}
+											name='lastName'
+											render={msg => <span className='error'>{msg}</span>}
 										/>
-										<label className="form-label" htmlFor="lastname">Last name</label>
+										<label className='form-label' htmlFor='lastname'>Last name</label>
 									</div>
 								</div>
 							</div>
 
-							<div className="form-floating mb-4">
+							<div className='form-floating mb-4'>
 								<input
-									type="email"
-									name="emailAddress"
-									id="email-address"
-									className={`form-control ${touched.emailAddress && errors.emailAddress && "is-invalid mb-4"}`}
+									type='email'
+									name='emailAddress'
+									id='email-address'
+									className={`form-control ${touched.emailAddress && errors.emailAddress && 'is-invalid mb-4'}`}
 									onChange={handleChange}
 									onBlur={handleBlur}
 								/>
 								<ErrorMessage
-									name="emailAddress"
-									render={msg => <span className="error">{msg}</span>}
+									name='emailAddress'
+									render={msg => <span className='error'>{msg}</span>}
 								/>
-								<label className="form-label" htmlFor="email-address">Email address</label>
+								<label className='form-label' htmlFor='email-address'>Email address</label>
 							</div>
 
-							<div className="form-floating mb-4">
+							<div className='form-floating mb-4'>
 								<input
-									type="password"
-									name="password"
-									id="password"
-									className={`form-control ${touched.password && errors.password && "is-invalid"}`}
+									type='password'
+									name='password'
+									id='password'
+									className={`form-control ${touched.password && errors.password && 'is-invalid'}`}
 									onChange={handleChange}
 									onBlur={handleBlur}
 								/>
 								<ErrorMessage
-									name="password"
-									render={msg => <span className="error">{msg}</span>}
+									name='password'
+									render={msg => <span className='error'>{msg}</span>}
 								/>
-								<label className="form-label" htmlFor="password">Password</label>
+								<label className='form-label' htmlFor='password'>Password</label>
 							</div>
 
-							<div className="form-floating mb-4">
+							<div className='form-floating mb-4'>
 								<input
-									type="password"
-									id="confirm-password"
-									name="confirmPassword"
-									className={`form-control ${touched.confirmPassword && errors.confirmPassword && "is-invalid"}`}
+									type='password'
+									id='confirm-password'
+									name='confirmPassword'
+									className={`form-control ${touched.confirmPassword && errors.confirmPassword && 'is-invalid'}`}
 									onChange={handleChange}
 									onBlur={handleBlur}
 								/>
 								<ErrorMessage
-									name="confirmPassword"
-									render={msg => <span className="error">{msg}</span>}
+									name='confirmPassword'
+									render={msg => <span className='error'>{msg}</span>}
 								/>
-								<label className="form-label" htmlFor="confirm-password">Confirm Password</label>
+								<label className='form-label' htmlFor='confirm-password'>Confirm Password</label>
 							</div>
 
-							<div className="form-check d-flex justify-content-center mb-4">
+							<div className='form-check d-flex justify-content-center mb-4'>
 								<input
-									type="checkbox"
-									id="termsOfService"
-									name="termsOfService"
+									type='checkbox'
+									id='termsOfService'
+									name='termsOfService'
 									required
-									className={`form-check-input me-2 ${touched.terms && errors.terms && "is-invalid"}`}
+									className={`form-check-input me-2 ${touched.terms && errors.terms && 'is-invalid'}`}
 								/>
-								<label className="form-check-label" htmlFor="termsOfService">
+								<label className='form-check-label' htmlFor='termsOfService'>
 									Accept terms and conditions
 								</label>
 								<ErrorMessage
-									name="termsOfService"
-									render={msg => <span className="error">{msg}</span>}
+									name='termsOfService'
+									render={msg => <span className='error'>{msg}</span>}
 								/>
 							</div>
-							<div className="d-flex flex-row justify-content-center">
-								<div className="text-center mx-4">
-									<button type="submit" className="btn btn-lg btn-secondary mb-4"><span
-										className="text-capitalize">Sign up</span></button>
+							<div className='d-flex flex-row justify-content-center'>
+								<div className='text-center mx-4'>
+									<button type='submit' className='btn btn-lg btn-secondary mb-4'><span
+										className='text-capitalize'>Sign up</span></button>
 								</div>
-								<div className="text-center mx-4">
-									<button type="reset" className="btn btn-lg btn-warning mb-4"><span
-										className="text-capitalize">Reset</span></button>
+								<div className='text-center mx-4'>
+									<button type='reset' className='btn btn-lg btn-warning mb-4'><span
+										className='text-capitalize'>Reset</span></button>
 								</div>
 							</div>
 
-							<div className="text-center">
+							<div className='text-center'>
 								<p>or sign up with:</p>
 								<button type='button' className='text-center btn btn-secondary btn-floating mx-2'>
 									<div>
-										<FaFacebookF className="pe-1" size={20} />
+										<FaFacebookF className='pe-1' size={20} />
 									</div>
 								</button>
 
 								<button type='button' className='btn btn-secondary btn-floating mx-2'>
 									<div className='text-center'>
-										<FaGoogle className="pe-1" size={20} />
+										<FaGoogle className='pe-1' size={20} />
 									</div>
 								</button>
 							</div>

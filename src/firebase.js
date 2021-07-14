@@ -115,9 +115,9 @@ export const fetchNotes = async (uid) => {
 			const Ref = db.collection(`root/${uid}/notes`);
 			const snapshot = await Ref.get();
 			let notes = snapshot.docs.map(doc => {
-				let { title, author, createdAt, description, tags } = doc.data();
+				let { title, author, createdAt, description, tags, notebookId } = doc.data();
 				createdAt = createdAt.toDate()
-				return { id: doc.id, title, author, createdAt, description, tags };
+				return { id: doc.id, title, author, createdAt, description, tags, notebookId };
 			});
 			resolve(notes);
 		} catch (err) {
@@ -154,12 +154,30 @@ export const deleteTag = async (uid, docId, tag) => {
 	});
 };
 
-export const createNotebook = async (uid, id, name) => {
+export const fetchNotebooks = async (uid, author) => {
+	return new Promise(async (resolve, reject) => {
+		try {
+			const Ref = db.collection(`root/${uid}/notebooks`);
+			const snapshot = await Ref.get();
+			let notebooks = snapshot.docs.map(doc => {
+				let { name, createdAt, notes } = doc.data();
+				createdAt = createdAt.toDate()
+				return { id: doc.id, name, author, createdAt, notes: [] };
+			});
+			resolve(notebooks);
+		} catch (err) {
+			reject(err);
+		}
+	});
+};
+
+export const createNotebook = async (uid, id, name, author) => {
 	return new Promise(async (resolve, reject) => {
 		try {
 			const Ref = db.collection(`root/${uid}/notebooks`);
 			await Ref.doc(id).set({
 				name,
+				author,
 				createdAt: new Date(),
 				notes: [],
 			})
@@ -167,6 +185,32 @@ export const createNotebook = async (uid, id, name) => {
 		} catch (e) {
 			console.error(e)
 			reject(e)
+		}
+	});
+};
+
+export const updateNotebook = async (uid, docId, data) => {
+	return new Promise(async (resolve, reject) => {
+		try {
+			const Ref = db.collection(`root/${uid}/notebooks`);
+			await Ref.doc(docId).update({
+				...data
+			})
+			resolve("Notebook Updated!");
+		} catch (err) {
+			reject(err);
+		}
+	});
+}
+
+export const deleteNotebook = async (uid, id) => {
+	return new Promise(async (resolve, reject) => {
+		try {
+			const Ref = db.collection(`root/${uid}/notebooks`);
+			await Ref.doc(id).delete()
+			resolve("Note Deleted!");
+		} catch (err) {
+			reject(err);
 		}
 	});
 };

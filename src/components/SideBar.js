@@ -1,16 +1,25 @@
-import React from 'react';
-import { Dropdown } from 'react-bootstrap';
+import React, { useRef, useState } from 'react';
+import { Dropdown, Overlay, Popover } from 'react-bootstrap';
 import defaultProfile from '../assets/images/default profile.png';
 import { signOutUser } from '../firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotesStore } from '../store';
-import '../stylesheets/App.css';
-import { Link, NavLink } from 'react-router-dom';
+import { Link, NavLink, withRouter } from 'react-router-dom';
 import logo from '../assets/images/logo.png';
+import '../stylesheets/App.css';
 
-const SideBar = ({ width }) => {
+const SideBar = ({ width }, ...props) => {
 	const user = useAuth();
-	const { notebooks, clearNotes } = useNotesStore();
+	const [show, setShow] = useState(false);
+	const [target, setTarget] = useState(null);
+	const ref = useRef(null);
+	const { notebooks, clearNotes, removeNotebook, renameNotebook } = useNotesStore();
+
+	const togglePopupMenu = (event) => {
+		event.preventDefault();
+		setShow(!show);
+		setTarget(event.target);
+	};
 
 	return (
 		<div
@@ -48,8 +57,42 @@ const SideBar = ({ width }) => {
 						<div id='personal-notebook' className='collapse'>
 							<ul className='btn-toggle-nav list-unstyled fw-normal pb-1 small'>
 								{notebooks.map(({ id, name }) => (
-									<li key={id}>
-										<NavLink to={`/${name}`} className='link-dark rounded'>{name}</NavLink>
+									<li key={id} ref={ref} onBlur={() => setShow(false)}>
+										<NavLink
+											to={`/${name}`}
+											className='link-dark rounded'
+											onContextMenu={togglePopupMenu}>
+											{name}
+										</NavLink>
+										<Overlay
+											show={show}
+											target={target}
+											placement='right'
+											container={ref.current}
+										>
+											<Popover id='popover-contained'>
+												<Popover.Body>
+													<div className='menu'>
+														<div
+															className='dropdown-item'
+															onMouseDown={(e) => e.preventDefault()}
+															onClick={() => renameNotebook(user.uid, id, "Notebook 1")}>
+															Rename
+														</div>
+														<div
+															className='dropdown-item'
+															onMouseDown={(e) => e.preventDefault()}
+															onClick={() => {
+																props.history.push('/')
+																removeNotebook(user.uid, id)
+																setShow(false);
+															}}
+															style={{ color: 'red' }}>Delete
+														</div>
+													</div>
+												</Popover.Body>
+											</Popover>
+										</Overlay>
 									</li>
 								))}
 							</ul>
@@ -141,4 +184,4 @@ const SideBar = ({ width }) => {
 	);
 };
 
-export default SideBar;
+export default withRouter(SideBar);

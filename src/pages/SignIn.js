@@ -1,20 +1,21 @@
 import React, { useEffect, useRef, useState } from 'react';
 import '../validation';
-import { Link, useHistory } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Modal } from 'bootstrap';
-import { fetchNotes, loginUser } from '../firebase';
+import { loginUser } from '../firebase';
 import { SignInSchema } from '../validation';
 import { ErrorMessage, Formik } from 'formik';
 import { useNotesStore } from '../store';
 import { FaFacebookF, FaGoogle } from 'react-icons/fa';
 
 const SignIn = props => {
-	const { setNotes } = useNotesStore();
+	const { setNotes, setNotebooks } = useNotesStore();
 	const [modal, setModal] = useState(false);
 	const [error, setError] = useState(null);
 	const loginAlert = useRef();
 
 	useEffect(() => {
+		console.log('PROPS', props);
 		setModal(new Modal(loginAlert.current));
 	}, []);
 
@@ -47,11 +48,10 @@ const SignIn = props => {
 					validationSchema={SignInSchema}
 					onSubmit={(values, actions) => {
 						loginUser(values)
-							.then(({ uid }) => {
-								fetchNotes(uid)
-									.then(notes => {
-										setNotes(notes);
-										props.history.push('/home');
+							.then(({ uid, displayName, metadata: { creationTime } }) => {
+								setNotebooks(uid, displayName, creationTime)
+									.then(() => {
+										setNotes(uid).then(() => props.history.push('/home'));
 									});
 							})
 							.catch(({ message }) => {

@@ -15,7 +15,7 @@ import { useMeasure } from 'react-use';
 const NoteList = ({ uid, filteredData, onSelect }) => {
 	let { id: ID } = useParams();
 	const [showToast, setShow] = useState(false);
-	const { removeNote } = useNotesStore(useCallback(state => state, [ID]));
+	const { removeNotebookNote } = useNotesStore(useCallback(state => state, [ID]));
 	const [divRef1, { height:outerDivHeight }] = useMeasure();
 	const [divRef2 ] = useMeasure();
 
@@ -56,7 +56,7 @@ const NoteList = ({ uid, filteredData, onSelect }) => {
 						<button type='button' className='btn bg-info text-black' data-bs-dismiss='modal'>No</button>
 						<button type='button' className='btn bg-primary text-black fw-bold' data-bs-dismiss='modal'
 						        onClick={async () => {
-							        removeNote(ID);
+							        removeNotebookNote(ID);
 							        await deleteNote(uid, ID);
 							        setShow(true);
 						        }}>Yes

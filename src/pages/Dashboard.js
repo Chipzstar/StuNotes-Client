@@ -26,6 +26,14 @@ const Dashboard = props => {
 		setShowModal(new Modal(notebookRef.current));
 	}, []);
 
+	useEffect(() => {
+		console.log("URL NAME:", NAME)
+	}, [NAME]);
+
+	useEffect(() => {
+		console.log("HOOK NAME:", name)
+	}, [name]);
+
 	return (
 		<div className='container-fluid fixed-container' ref={ref}>
 			<NotebookModal
@@ -40,7 +48,7 @@ const Dashboard = props => {
 				onChange={handleChange}
 			/>
 			<SideBar width={WIDTH / 6} />
-			{NAME ?
+			{NAME && notebooks.some(item => item.name === NAME) ?
 				<Notebook
 					notebookId={notebooks.find(item => item.name === NAME).id}
 					notebookName={NAME}

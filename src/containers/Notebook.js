@@ -168,7 +168,7 @@ const Notebook = ({ notebookId, notebookName, notes, ...props }) => {
 						<div className='d-flex flex-grow-1 align-items-center'>
 							<RiBookletLine size={25} className='me-3' />
 							<span
-								className='text-center text-capitalize lead font-weight-bold'>All Notes - {noteCount}</span>
+								className='text-center text-capitalize lead font-weight-bold'>{notebookName} - {noteCount}</span>
 						</div>
 						<div className='d-flex flex-grow-0 align-items-center justify-content-center'>
 							<div role='button' onClick={() => calendarModal.show()}>

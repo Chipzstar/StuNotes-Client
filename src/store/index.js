@@ -1,12 +1,12 @@
 import create from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { groupSchema, notebookSchema, noteSchema } from '../schemas';
-import { createNotebook } from '../firebase';
+import { createNotebook, updateNotebook, deleteNotebook, fetchNotebooks, fetchNotes } from '../firebase';
 
 let notesStore = (set, get) => ({
 	allNotes: [],
 	notebooks: [],
-	addNote: (id, notebookId, title, author) => {
+	/*addNote: (id, notebookId, title, author) => {
 		let note = {
 			...noteSchema,
 			id,
@@ -18,26 +18,77 @@ let notesStore = (set, get) => ({
 			allNotes: [...state.allNotes, note]
 		}));
 		return note;
-	},
-	setNotes: (notes) => set(state => ({
-		allNotes: notes,
-		notebooks: []
+	},*/
+	createDefaultNotebook: (uid, author) => set(state => ({
+		notebooks: [...state.notebooks, {
+			...notebookSchema,
+			id: uid,
+			author,
+			name: 'All Notes',
+			createdAt: new Date(),
+			notes: []
+		}]
 	})),
-	removeNote: (id) => set(state => {
-		let targetIndex = state.allNotes.findIndex(item => item.id === id);
-		return { allNotes: state.allNotes.filter((item, index) => index !== targetIndex) };
-	}),
+	setNotebooks: async (uid, author, createdAt) => {
+		let notebooks = await fetchNotebooks(uid, author);
+		let defaultNotebook = {
+			...notebookSchema,
+			id: uid,
+			author,
+			name: 'All Notes',
+			createdAt,
+			notes: []
+		};
+		set(state => ({
+			notebooks: [defaultNotebook, ...notebooks]
+		}));
+	},
+	setNotes: async (uid) => {
+		let allNotes = await fetchNotes(uid);
+		set(state => ({
+			allNotes,
+			notebooks: state.notebooks.map((notebook, index) => index === 0 ? {
+				...notebook,
+				notes: allNotes
+			} : { ...notebook, notes: allNotes.filter(item => item.notebookId === notebook.id) })
+		}));
+	},
+	addNotebook: async (uid, id, name, author) => {
+		await createNotebook(uid, id, name, author);
+		let notebook = { ...notebookSchema, id, name, author };
+		set(state => ({
+			allNotes: [...state.allNotes],
+			notebooks: [...state.notebooks, notebook]
+		}));
+		return notebook;
+	},
+	removeNotebook: async (uid, id) => {
+		let result = await deleteNotebook(uid, id);
+		console.log(result);
+		set(state => ({
+			allNotes: state.allNotes.filter(item => item.notebookId !== id),
+			notebooks: state.notebooks.filter(item => item.id !== id)
+		}));
+	},
+	renameNotebook: async (uid, id, name) => {
+		let result = await updateNotebook(uid, id, { name })
+		console.log(result)
+		set(state => ({
+			allNotes: [...state.allNotes],
+			notebooks: state.notebooks.map(item => item.id === id ? { ...item, name } : item)
+		}))
+	},
 	clearNotes: () => set(state => ({
 		allNotes: [],
 		notebooks: []
 	})),
 	updateMetaInfo: (id, data) => set(state => ({
 		allNotes: state.allNotes.map(item => item.id === id ? { ...item, ...data } : item),
-		notebooks: []
+		notebooks: [...state.notebooks]
 	})),
 	addTag: (id, tag) => set(state => ({
 		allNotes: state.allNotes.map(item => item.id === id ? { ...item, tags: [...item.tags, tag] } : item),
-		notebooks: []
+		notebooks: [...state.notebooks]
 	})),
 	removeTag: (id, tag) => set(state => ({
 		allNotes: state.allNotes.map(item => item.id === id ? {
@@ -46,21 +97,6 @@ let notesStore = (set, get) => ({
 		} : item),
 		notebooks: []
 	})),
-	addNotebook: async (uid, id, name) => {
-		await createNotebook(uid, id, name);
-		set(state => ({
-			allNotes: [...state.allNotes],
-			notebooks: [...state.notebooks, {
-				...notebookSchema,
-				id,
-				name
-			}]
-		}));
-	},
-	renameNotebook: (id, name) => set(state => ({
-		allNotes: [...state.allNotes],
-		notebooks: state.notebooks.map(item => item.id === id ? { ...item, name } : item)
-	})),
 	addNotebookNote: (notebookId, noteId, title, author) => set(state => {
 		let note = {
 			...noteSchema,
@@ -68,13 +104,26 @@ let notesStore = (set, get) => ({
 			notebookId,
 			author,
 			title,
-			createdAt: new Date(),
+			createdAt: new Date()
 		};
 		return {
 			allNotes: [...state.allNotes, note],
-			notebooks: state.notebooks.map(item => item.id === notebookId ? { ...item, notes: [...item.notes, note] } : item)
+			notebooks: state.notebooks.map(item => item.id === notebookId ? {
+				...item,
+				notes: [...item.notes, note]
+			} : item)
 		};
-	})
+	}),
+	removeNotebookNote: (id) => set(state => {
+		let { notebookId } = state.allNotes.find(item => item.id === id);
+		return {
+			allNotes: state.allNotes.filter(item => item.id !== id),
+			notebooks: state.notebooks.map(item => item.id === notebookId ? {
+				...item,
+				notes: item.notes.filter(item => item.id !== id)
+			} : item)
+		};
+	}),
 });
 
 let groupsStore = (set) => ({

@@ -174,4 +174,18 @@
     background-color: #d2f4ea;
 }
 
+.menu {
+    width: 100px;
+    background: #ffffff;
+}
+.menu-item {
+    cursor: pointer;
+    padding: 5px;
+    height: 28px;
+    border-bottom: 1px solid rgb(187, 187, 187);
+}
+.menu-item:hover {
+    color: #2980b9;
+}
+
 

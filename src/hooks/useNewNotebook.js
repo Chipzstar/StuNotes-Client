@@ -17,8 +17,8 @@ const useNewNotebook = () => {
 				}
 			}
 			let id = nanoid(16);
-			await addNotebook(user.uid, id, name);
-			console.log(notebooks)
+			let notebook = await addNotebook(user.uid, id, name, user.displayName);
+			console.log(notebook)
 			setId(id);
 		} catch (err) {
 			console.error(err);
