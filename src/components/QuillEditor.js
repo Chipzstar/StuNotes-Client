@@ -26,7 +26,7 @@ class QuillEditor extends React.Component {
 	}
 
 	componentDidMount() {
-		const { room } = this.props;
+		const { notebook, room } = this.props;
 		//this.persistence = new IndexeddbPersistence(room, yDoc);
 		this.yDoc = new Y.Doc({ guid: this.context.uid });
 		console.log(this.yDoc)
@@ -38,13 +38,13 @@ class QuillEditor extends React.Component {
 		/*
 		this.persistence.on('synced', () => console.log('initial content loaded'));
 		*/
-		this.initObservers(room)
+		this.initObservers(notebook, room)
 		window.addEventListener('blur', () => this.quill.blur());
 	}
 
 	shouldComponentUpdate(nextProps, nextState, nextContext) {
 		if (this.props.room !== nextProps.room){
-			this.resetYDoc(nextProps.room)
+			this.resetYDoc(nextProps.notebook, nextProps.room)
 			return true
 		}
 		return false
@@ -56,16 +56,16 @@ class QuillEditor extends React.Component {
 		this.yDoc.destroy();
 	}
 
-	initObservers(room) {
+	initObservers(notebook, room) {
 		this.yText.observe(() => {
 			let text = this.quill.getText()
-			let index = this.props.store.notes.findIndex(item => item.id === room)
+			let index = this.props.store.notebooks[0].notes.findIndex(item => item.id === room)
 
-			if (text.length === 100 && this.props.store.notes[index]['description'] !== text){
-				this.props.store.updateMetaInfo(room, {description: text.padEnd(103, "...")})
+			if (text.length === 100 && this.props.store.notebooks[0].notes[index]['description'] !== text){
+				this.props.store.updateMetaInfo(notebook, room, {description: text.padEnd(103, "...")})
 				this.props.onChange(room, {description: text.padEnd(103, "...")})
-			} else if (text.length < 100 && this.props.store.notes[index]['description'] !== text) {
-				this.props.store.updateMetaInfo(room, {description: text})
+			} else if (text.length < 100 && this.props.store.notebooks[0].notes[index]['description'] !== text) {
+				this.props.store.updateMetaInfo(notebook, room, {description: text})
 				this.props.onChange(room, {description: text})
 			}
 		})
@@ -76,13 +76,13 @@ class QuillEditor extends React.Component {
 		this.wsProvider.on('sync', (isSynced) => console.log(isSynced ? "synced" : "not synced"))
 	}
 
-	resetYDoc = (room) => {
+	resetYDoc = (notebook, room) => {
 		this.wsProvider.destroy();
 		this.yDoc = new Y.Doc({ guid: this.context.uid });
 		this.yText = this.yDoc.getText('quill');
 		//console.count("BINDING TO EDITOR")
 		this.bindEditor(this.yText, room, this.yDoc)
-		this.initObservers(room)
+		this.initObservers(notebook, room)
 	}
 
 	bindEditor = (yText, room) => {
@@ -161,7 +161,7 @@ class QuillEditor extends React.Component {
 			      <button className='ql-clean' />
 			    </span>
 				</div>
-				<div id='editor' className='text-editor border-0' style={{fontSize: "120%"}}/>
+				<div id='editor' className='text-editor border-0' style={{fontSize: "100%"}}/>
 			</div>
 		);
 	}

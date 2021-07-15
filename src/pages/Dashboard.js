@@ -47,7 +47,7 @@ const Dashboard = props => {
 				}}
 				onChange={handleChange}
 			/>
-			<SideBar width={WIDTH / 6} />
+			<SideBar width={WIDTH / 6} {...props}/>
 			{NAME && notebooks.some(item => item.name === NAME) ?
 				<Notebook
 					notebookId={notebooks.find(item => item.name === NAME).id}

@@ -32,7 +32,6 @@ let routes = (
 			<Navbar />
 			<ForgotPassword />
 		</Route>
-		<PrivateRoute exact path='/home' component={Dashboard} />
 		<PrivateRoute exact path='/:name' component={Dashboard} />
 		<PrivateRoute exact path='/:name/:id' component={Dashboard} />
 		<PrivateRoute exact path='/group' component={Dashboard} />

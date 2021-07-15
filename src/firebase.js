@@ -1,7 +1,6 @@
 import firebase from 'firebase/app';
 import 'firebase/auth';
 import 'firebase/firestore';
-import { groupSchema } from './schemas';
 
 const app = firebase.initializeApp({
 	apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
@@ -64,50 +63,64 @@ export const signOutUser = async () => {
 	});
 };
 
-export const createNote = async (uid, id, title, author) => {
+export const createNote = async (uid, notebookId, docId, title, author) => {
 	return new Promise(async (resolve, reject) => {
 		try {
-			const Ref = db.collection(`root/${uid}/notes`);
-			await Ref.doc(id).set({
+			const noteRef = db.doc(`root/${uid}/notes/${docId}`);
+			if (uid !== notebookId) {
+				const notebookRef = db.doc(`root/${uid}/notebooks/${notebookId}`);
+				await notebookRef.update({
+					notes: firebase.firestore.FieldValue.arrayUnion(noteRef)
+				});
+			}
+			await noteRef.set({
 				title,
 				author,
+				notebookId,
 				createdAt: new Date(),
-				description: "",
+				description: '',
 				tags: []
-			})
-			resolve()
+			});
+			resolve(`Note Created Successfully!`)
 		} catch (e) {
-			console.error(e)
-			reject(e)
+			console.error(e);
+			reject(e);
 		}
 	});
 };
 
-export const updateNote = async(uid, docId, data) => {
+export const updateNote = async (uid, docId, data) => {
 	return new Promise(async (resolve, reject) => {
 		try {
 			const Ref = db.collection(`root/${uid}/notes`);
 			await Ref.doc(docId).update({
 				...data
-			})
-			resolve("Note Updated!");
+			});
+			resolve('Note Updated!');
 		} catch (err) {
 			reject(err);
 		}
 	});
-}
+};
 
-export const deleteNote = async(uid, docId) => {
+export const deleteNote = async (uid, notebookId, noteId) => {
 	return new Promise(async (resolve, reject) => {
 		try {
-			const Ref = db.collection(`root/${uid}/notes`);
-			await Ref.doc(docId).delete()
-			resolve("Note Deleted!");
+			const noteRef = db.doc(`root/${uid}/notes/${noteId}`);
+			if (uid !== notebookId) {
+				const notebookRef = db.doc(`root/${uid}/notebooks/${notebookId}`);
+				await notebookRef.update({
+					notes: firebase.firestore.FieldValue.arrayRemove(noteRef)
+				});
+				console.log(await notebookRef.get());
+			}
+			await noteRef.delete();
+			resolve('Note Deleted Successfully!');
 		} catch (err) {
 			reject(err);
 		}
 	});
-}
+};
 
 export const fetchNotes = async (uid) => {
 	return new Promise(async (resolve, reject) => {
@@ -116,7 +129,7 @@ export const fetchNotes = async (uid) => {
 			const snapshot = await Ref.get();
 			let notes = snapshot.docs.map(doc => {
 				let { title, author, createdAt, description, tags, notebookId } = doc.data();
-				createdAt = createdAt.toDate()
+				createdAt = createdAt.toDate();
 				return { id: doc.id, title, author, createdAt, description, tags, notebookId };
 			});
 			resolve(notes);
@@ -132,8 +145,8 @@ export const createTag = async (uid, docId, tag) => {
 			const Ref = db.doc(`root/${uid}/notes/${docId}`);
 			await Ref.update({
 				tags: firebase.firestore.FieldValue.arrayUnion(tag)
-			})
-			resolve("New tag added")
+			});
+			resolve('New tag added');
 		} catch (err) {
 			reject(err);
 		}
@@ -146,8 +159,8 @@ export const deleteTag = async (uid, docId, tag) => {
 			const Ref = db.doc(`root/${uid}/notes/${docId}`);
 			await Ref.update({
 				tags: firebase.firestore.FieldValue.arrayRemove(tag)
-			})
-			resolve("Tag removed")
+			});
+			resolve('Tag removed');
 		} catch (err) {
 			reject(err);
 		}
@@ -161,7 +174,7 @@ export const fetchNotebooks = async (uid, author) => {
 			const snapshot = await Ref.get();
 			let notebooks = snapshot.docs.map(doc => {
 				let { name, createdAt, notes } = doc.data();
-				createdAt = createdAt.toDate()
+				createdAt = createdAt.toDate();
 				return { id: doc.id, name, author, createdAt, notes: [] };
 			});
 			resolve(notebooks);
@@ -179,12 +192,12 @@ export const createNotebook = async (uid, id, name, author) => {
 				name,
 				author,
 				createdAt: new Date(),
-				notes: [],
-			})
-			resolve()
+				notes: []
+			});
+			resolve();
 		} catch (e) {
-			console.error(e)
-			reject(e)
+			console.error(e);
+			reject(e);
 		}
 	});
 };
@@ -195,20 +208,20 @@ export const updateNotebook = async (uid, docId, data) => {
 			const Ref = db.collection(`root/${uid}/notebooks`);
 			await Ref.doc(docId).update({
 				...data
-			})
-			resolve("Notebook Updated!");
+			});
+			resolve('Notebook Updated!');
 		} catch (err) {
 			reject(err);
 		}
 	});
-}
+};
 
 export const deleteNotebook = async (uid, id) => {
 	return new Promise(async (resolve, reject) => {
 		try {
 			const Ref = db.collection(`root/${uid}/notebooks`);
-			await Ref.doc(id).delete()
-			resolve("Note Deleted!");
+			await Ref.doc(id).delete();
+			resolve('Note Deleted!');
 		} catch (err) {
 			reject(err);
 		}
@@ -225,11 +238,11 @@ export const createGroup = async (uid, id, name, owner) => {
 				createdAt: new Date(),
 				notes: [],
 				members: []
-			})
-			resolve()
+			});
+			resolve();
 		} catch (e) {
-			console.error(e)
-			reject(e)
+			console.error(e);
+			reject(e);
 		}
 	});
 };

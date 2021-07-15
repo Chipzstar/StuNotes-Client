@@ -11,13 +11,22 @@ import { useParams } from 'react-router-dom';
 import { deleteNote } from '../firebase';
 import { Scrollbars } from 'react-custom-scrollbars';
 import { useMeasure } from 'react-use';
+import { notebookSchema } from '../schemas';
 
 const NoteList = ({ uid, filteredData, onSelect }) => {
-	let { id: ID } = useParams();
+	let { name: NAME ,id: ID } = useParams();
 	const [showToast, setShow] = useState(false);
-	const { removeNotebookNote } = useNotesStore(useCallback(state => state, [ID]));
+	const { removeNotebookNote } = useNotesStore(useCallback(state => state, [ID, NAME]));
 	const [divRef1, { height:outerDivHeight }] = useMeasure();
-	const [divRef2 ] = useMeasure();
+	const [divRef2, { height:innerDivHeight } ] = useMeasure();
+
+	/*useEffect(() => {
+		console.log("inner", innerDivHeight)
+	}, [innerDivHeight]);
+
+	useEffect(() => {
+		console.log("outer", outerDivHeight)
+	}, [outerDivHeight]);*/
 
 	useEffect(() => {
 		console.log("NOTE_ID", ID)
@@ -54,12 +63,13 @@ const NoteList = ({ uid, filteredData, onSelect }) => {
 					</div>
 					<div className='modal-footer'>
 						<button type='button' className='btn bg-info text-black' data-bs-dismiss='modal'>No</button>
-						<button type='button' className='btn bg-primary text-black fw-bold' data-bs-dismiss='modal'
-						        onClick={async () => {
-							        removeNotebookNote(ID);
-							        await deleteNote(uid, ID);
-							        setShow(true);
-						        }}>Yes
+						<button
+							type='button'
+							className='btn bg-primary text-black fw-bold'
+							data-bs-dismiss='modal'
+							onClick={() => removeNotebookNote(uid, ID).then(() => setShow(true))}
+						>
+							Yes
 						</button>
 					</div>
 				</div>
@@ -121,7 +131,6 @@ const NoteList = ({ uid, filteredData, onSelect }) => {
 };
 
 NoteList.propTypes = {
-	uid: PropTypes.string.isRequired,
 	onSelect: PropTypes.func.isRequired,
 	filteredData: PropTypes.array.isRequired
 };

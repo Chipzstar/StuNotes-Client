@@ -14,9 +14,8 @@ import { RiBookletLine } from 'react-icons/ri';
 import { AiOutlineSortAscending } from 'react-icons/ai';
 import { Modal } from 'bootstrap';
 //hooks
-import { useYArray, useYDoc } from 'zustand-yjs';
-import { useNotebookStore, useNotesStore } from '../store';
-import { createNote, createTag, deleteTag, updateNote } from '../firebase';
+import { useNotesStore } from '../store';
+import { updateNote } from '../firebase';
 import useCalendar from '../hooks/useCalendar';
 //styles
 import '../stylesheets/App.css';
@@ -24,20 +23,13 @@ import 'react-calendar/dist/Calendar.css';
 import useNewNotebook from '../hooks/useNewNotebook';
 import NotebookModal from '../components/NotebookModal';
 
-const connectDoc = (doc) => {
-	console.log('connected to a provider with room', doc.guid);
-	return () => console.log('disconnected', doc.guid);
-};
-
 const Notebook = ({ notebookId, notebookName, notes, ...props }) => {
 	const user = useAuth();
-	const {name: NAME, id: ID } = useParams()
-	const yDoc = useYDoc(user.uid, connectDoc);
-	const yDocList = yDoc.getArray('notes');
+	const { name: NAME, id: ID } = useParams();
 	//hooks
 	const { updateMetaInfo, addTag, removeTag, addNotebookNote } = useNotesStore();
 	const [calendarRef, date, handleDateChange] = useCalendar(filterNotesByDate);
-	const { name, handleChange, handleSubmit } = useNewNotebook()
+	const { name, handleChange, handleSubmit } = useNewNotebook();
 	//state
 	const [noteCount, setNoteCount] = useState(notes.length);
 	const [filteredNotes, setFilteredNotes] = useState(notes);
@@ -49,7 +41,7 @@ const Notebook = ({ notebookId, notebookName, notes, ...props }) => {
 	const [status, setStatus] = useState('All changes saved');
 	const [calendarModal, showCalendarModal] = useState(false);
 	const [notebookModal, showNotebookModal] = useState(false);
-	const notebookRef = useRef()
+	const notebookRef = useRef();
 
 	const debouncedChangeHandler = useMemo(() => debounce((id, data) =>
 		update(id, data).then(() => setStatus('All changes saved')), 2000), []);
@@ -63,7 +55,7 @@ const Notebook = ({ notebookId, notebookName, notes, ...props }) => {
 		[]);
 
 	useEffect(() => {
-		console.table({ ID, NAME })
+		console.table({ ID, NAME });
 		showCalendarModal(new Modal(calendarRef.current));
 		showNotebookModal(new Modal(notebookRef.current));
 		return () => debouncedChangeHandler.cancel();
@@ -79,12 +71,15 @@ const Notebook = ({ notebookId, notebookName, notes, ...props }) => {
 	}
 
 	async function createNewNote() {
-		let id = uuidv4()
-		setNoteId(id);
-		setTitle('Untitled');
-		addNotebookNote(notebookId, id, 'Untitled', author)
-		await createNote(user.uid, id, 'Untitled', author);
-		props.history.push(`/${notebookName}/${id}`);
+		try {
+			let id = uuidv4();
+			setNoteId(id);
+			setTitle('Untitled');
+			await addNotebookNote(user.uid, notebookId, id, 'Untitled', author);
+			props.history.push(`/${notebookName}/${id}`);
+		} catch (e) {
+			console.error(e)
+		}
 	}
 
 	const handleSearch = (e) => {
@@ -115,7 +110,7 @@ const Notebook = ({ notebookId, notebookName, notes, ...props }) => {
 		setStatus('Saving...');
 		const { value } = e.target;
 		setTitle(value);
-		updateMetaInfo(noteId, { title: value });
+		updateMetaInfo(notebookId, noteId, { title: value });
 		debouncedChangeHandler(noteId, { title: value });
 	};
 
@@ -128,16 +123,14 @@ const Notebook = ({ notebookId, notebookName, notes, ...props }) => {
 		e.preventDefault();
 		let { value } = e.target.elements[0];
 		setTags(prevState => {
-			addTag(noteId, value);
-			createTag(user.uid, noteId, value);
+			addTag(user.uid, notebookName, noteId, value);
 			return [...prevState, value];
 		});
 	};
 
 	const handleRemoveTag = async (tagName) => {
 		setTags(prevState => {
-			removeTag(noteId, tagName);
-			deleteTag(user.uid, noteId, tagName);
+			removeTag(user.uid, notebookName, noteId, tagName);
 			return prevState.filter(item => item !== tagName);
 		});
 	};
@@ -156,7 +149,7 @@ const Notebook = ({ notebookId, notebookName, notes, ...props }) => {
 					notebookModal.hide();
 					props.history.push(`/${name}`);
 				}).catch((err) => console.error(err));
-			}}/>
+			}} />
 			<div className='col-sm-4 col-md-3 col-xl-3 bg-light'>
 				<div className='d-flex flex-column pt-2 ps-2 text-dark min-vh-100'>
 					<NotebookNav
@@ -186,7 +179,6 @@ const Notebook = ({ notebookId, notebookName, notes, ...props }) => {
 			</div>
 			<div className='col py-3'>
 				<NoteContainer
-					notebookName={notebookName}
 					uid={user.uid}
 					noteId={noteId}
 					status={status}

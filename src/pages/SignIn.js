@@ -51,7 +51,7 @@ const SignIn = props => {
 							.then(({ uid, displayName, metadata: { creationTime } }) => {
 								setNotebooks(uid, displayName, creationTime)
 									.then(() => {
-										setNotes(uid).then(() => props.history.push('/home'));
+										setNotes(uid).then(() => props.history.push('/All Notes'));
 									});
 							})
 							.catch(({ message }) => {

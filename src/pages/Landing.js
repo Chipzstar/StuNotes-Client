@@ -16,7 +16,7 @@ class Landing extends Component {
 						A simple application for School / University students to collaborate together on notes
 					</p>
 					<div className='pt-3'>
-						<Link to='/home'>
+						<Link to='/All Notes'>
 							<button className='btn btn-lg btn-secondary text-center text-capitalize'>
 								Go to Notebook!
 							</button>

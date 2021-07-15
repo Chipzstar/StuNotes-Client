@@ -52,7 +52,7 @@ const SignUp = props => {
 						registerNewUser(values)
 							.then(({ uid, displayName }) => {
 								createDefaultNotebook(uid, displayName);
-								props.history.push('/home');
+								props.history.push('/All Notes');
 							})
 							.catch(({ message }) => {
 								console.error(message);

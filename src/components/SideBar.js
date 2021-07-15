@@ -1,15 +1,16 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Dropdown, Overlay, Popover } from 'react-bootstrap';
 import defaultProfile from '../assets/images/default profile.png';
 import { signOutUser } from '../firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotesStore } from '../store';
-import { Link, NavLink, withRouter } from 'react-router-dom';
+import { Link, NavLink, useHistory } from 'react-router-dom';
 import logo from '../assets/images/logo.png';
 import '../stylesheets/App.css';
 
-const SideBar = ({ width }, ...props) => {
+const SideBar = ({ width }) => {
 	const user = useAuth();
+	const history = useHistory()
 	const [show, setShow] = useState(false);
 	const [target, setTarget] = useState(null);
 	const ref = useRef(null);
@@ -56,12 +57,12 @@ const SideBar = ({ width }, ...props) => {
 						</a>
 						<div id='personal-notebook' className='collapse'>
 							<ul className='btn-toggle-nav list-unstyled fw-normal pb-1 small'>
-								{notebooks.map(({ id, name }) => (
+								{notebooks.map(({ id, name }, index) => (
 									<li key={id} ref={ref} onBlur={() => setShow(false)}>
 										<NavLink
 											to={`/${name}`}
 											className='link-dark rounded'
-											onContextMenu={togglePopupMenu}>
+											onContextMenu={index !== 0 ? togglePopupMenu : undefined}>
 											{name}
 										</NavLink>
 										<Overlay
@@ -83,7 +84,7 @@ const SideBar = ({ width }, ...props) => {
 															className='dropdown-item'
 															onMouseDown={(e) => e.preventDefault()}
 															onClick={() => {
-																props.history.push('/')
+																history.push('/All Notes')
 																removeNotebook(user.uid, id)
 																setShow(false);
 															}}
@@ -184,4 +185,4 @@ const SideBar = ({ width }, ...props) => {
 	);
 };
 
-export default withRouter(SideBar);
+export default SideBar;

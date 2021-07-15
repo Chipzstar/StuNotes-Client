@@ -1,5 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import PropTypes from 'prop-types';
+import { useParams } from 'react-router-dom';
 import document from '../assets/svg/document.svg';
 import priceTag from '../assets/svg/price-tag.svg';
 import share from '../assets/svg/share.svg';
@@ -9,7 +10,6 @@ import { useNotesStore } from '../store';
 import Tag from './Tag';
 
 const NoteContainer = ({
-       notebookName,
        status,
        author,
        noteId,
@@ -21,7 +21,8 @@ const NoteContainer = ({
        onRemoveTag,
        newNote
    }) => {
-	const { allNotes: notes } = useNotesStore(useCallback(state => state, [noteId]));
+	const {name: NAME } = useParams()
+	const { notebooks } = useNotesStore(useCallback(state => state, [noteId]));
 	const [tag, setTag] = useState('');
 
 	const handleTag = useCallback(
@@ -36,12 +37,12 @@ const NoteContainer = ({
 				<div className='d-flex align-items-center'>
 					<div className='d-flex flex-row align-items-center pe-5'>
 						<img src={document} width={25} height={25} alt='' />
-						<span className='lead font-weight-bold ps-3'>{notebookName}</span>
+						<span className='lead font-weight-bold ps-3'>{NAME}</span>
 					</div>
 					<div className='d-flex flex-row align-items-center'>
 						<img src={priceTag} width={25} height={25} alt='' />
 						<form onSubmit={(event) => {
-							onNewTag(event, tag);
+							onNewTag(event);
 							setTag('');
 						}}>
 							<input
@@ -68,7 +69,7 @@ const NoteContainer = ({
 					</div>
 				</div>
 			</div>
-			{Object.keys(notes).length ? (
+			{notebooks.find(item => item.name === NAME).notes.  length ? (
 				<div className='d-flex flex-column'>
 					<div className='d-flex flex-row align-items-center justify-content-between px-2 pt-2'>
 						{/*TODO - check styling*/}
@@ -91,7 +92,7 @@ const NoteContainer = ({
 					</div>
 					<hr className='border-2' />
 					<div>
-						<QuillEditor room={noteId} onChange={onDescriptionChange} />
+						<QuillEditor notebook={NAME} room={noteId} onChange={onDescriptionChange} />
 					</div>
 				</div>
 			) : (
