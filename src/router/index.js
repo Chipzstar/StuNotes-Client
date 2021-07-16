@@ -7,7 +7,6 @@ import PrivateRoute from '../components/PrivateRoute';
 import ForgotPassword from '../pages/ForgotPassword';
 import Navbar from '../components/NavBar';
 import Settings from '../pages/Settings';
-import Groups from '../containers/Groups';
 import Dashboard from '../pages/Dashboard';
 
 let routes = (
@@ -32,12 +31,15 @@ let routes = (
 			<Navbar />
 			<ForgotPassword />
 		</Route>
-		<PrivateRoute exact path='/:name' component={Dashboard} />
-		<PrivateRoute exact path='/:name/:id' component={Dashboard} />
-		<PrivateRoute exact path='/group' component={Dashboard} />
-		<PrivateRoute path='/group/:id' component={Dashboard} />
-		<PrivateRoute path='/group/:id/notebook' component={Groups} />
+
+		{/*ORDER MATTERS*/}
+		<PrivateRoute exact path='/notebooks/:notebook' component={Dashboard} />
+		<PrivateRoute exact path='/notebooks/:notebook/:id' component={Dashboard} />
+		<PrivateRoute exact path='/groups/:group' component={Dashboard} />
+		<PrivateRoute exact path='/groups/:group/:id' component={Dashboard} />
+		<PrivateRoute exact path='/trash/:id' component={Dashboard} />
 		<PrivateRoute exact path='/settings' component={Settings} />
+		{/*NOTEBOOK ROUTES MUST COME LAST*/}
 		<Route exact path='*' component={ErrorPage} />
 	</Switch>
 );

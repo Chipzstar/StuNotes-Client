@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useParams } from 'react-router-dom';
 import document from '../assets/svg/document.svg';
@@ -7,22 +7,24 @@ import share from '../assets/svg/share.svg';
 import upload from '../assets/svg/cloud-upload.svg';
 import QuillEditor from './QuillEditor';
 import { useNotesStore } from '../store';
+import { TYPES } from '../constants';
 import Tag from './Tag';
 
 const NoteContainer = ({
-       status,
-       author,
-       noteId,
-       title,
-       tags,
-       onTitleChange,
-       onDescriptionChange,
-       onNewTag,
-       onRemoveTag,
-       newNote
-   }) => {
-	const {name: NAME } = useParams()
-	const { notebooks } = useNotesStore(useCallback(state => state, [noteId]));
+	                       status,
+	                       author,
+	                       notebookName,
+	                       noteId,
+	                       title,
+	                       tags,
+	                       onTitleChange,
+	                       onDescriptionChange,
+	                       onNewTag,
+	                       onRemoveTag,
+	                       newNote
+                       }) => {
+	const { notebook: NOTEBOOK, group: GROUP } = useParams();
+	const { groups, notebooks } = useNotesStore(useCallback(state => state, [noteId]));
 	const [tag, setTag] = useState('');
 
 	const handleTag = useCallback(
@@ -31,13 +33,34 @@ const NoteContainer = ({
 			setTag(value.toLowerCase());
 		}, []);
 
+	const type = useMemo(() => NOTEBOOK ? TYPES.PERSONAL : GROUP ? TYPES.SHARED : null, [NOTEBOOK, GROUP]);
+
+	const notebookId = useMemo(() => {
+		if (NOTEBOOK) {
+			return notebooks.find(item => item.name === NOTEBOOK).id
+		} else if (GROUP) {
+			return groups.find(item => item.name === GROUP).id
+		} else {
+			return notebooks[0].id
+		}
+	}, [NOTEBOOK, GROUP]);
+
+	//TODO - debug editor slow response when typing
+	const hasNotes = useMemo(() => {
+		if (NOTEBOOK) {
+			return notebooks.find(item => item.name === NOTEBOOK).notes.length;
+		} else if (GROUP) {
+			return groups.find(item => item.name === GROUP).notes.length;
+		} else return false;
+	}, [NOTEBOOK, GROUP, notebooks, groups]);
+
 	return (
 		<div className='container-fluid flex-column text-center pb-3'>
 			<div className='d-flex flex-row align-items-center justify-content-between px-2 pb-3'>
 				<div className='d-flex align-items-center'>
 					<div className='d-flex flex-row align-items-center pe-5'>
 						<img src={document} width={25} height={25} alt='' />
-						<span className='lead font-weight-bold ps-3'>{NAME}</span>
+						<span className='lead font-weight-bold ps-3'>{notebookName}</span>
 					</div>
 					<div className='d-flex flex-row align-items-center'>
 						<img src={priceTag} width={25} height={25} alt='' />
@@ -69,7 +92,7 @@ const NoteContainer = ({
 					</div>
 				</div>
 			</div>
-			{notebooks.find(item => item.name === NAME).notes.  length ? (
+			{hasNotes ? (
 				<div className='d-flex flex-column'>
 					<div className='d-flex flex-row align-items-center justify-content-between px-2 pt-2'>
 						{/*TODO - check styling*/}
@@ -92,7 +115,12 @@ const NoteContainer = ({
 					</div>
 					<hr className='border-2' />
 					<div>
-						<QuillEditor notebook={NAME} room={noteId} onChange={onDescriptionChange} />
+						<QuillEditor
+							type={type}
+							notebookId={notebookId}
+							room={noteId}
+							onChange={onDescriptionChange}
+						/>
 					</div>
 				</div>
 			) : (

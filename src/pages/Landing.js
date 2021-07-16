@@ -4,6 +4,7 @@ import Transcribe from '../assets/svg/audio transcription.svg';
 import Collab from '../assets/svg/collaborate.svg';
 import '../stylesheets/App.css';
 import { Link } from 'react-router-dom';
+import { HOME_URL } from '../constants';
 
 class Landing extends Component {
 	render() {
@@ -16,7 +17,7 @@ class Landing extends Component {
 						A simple application for School / University students to collaborate together on notes
 					</p>
 					<div className='pt-3'>
-						<Link to='/All Notes'>
+						<Link to={HOME_URL}>
 							<button className='btn btn-lg btn-secondary text-center text-capitalize'>
 								Go to Notebook!
 							</button>

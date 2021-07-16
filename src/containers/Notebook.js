@@ -21,15 +21,26 @@ import useCalendar from '../hooks/useCalendar';
 import '../stylesheets/App.css';
 import 'react-calendar/dist/Calendar.css';
 import useNewNotebook from '../hooks/useNewNotebook';
-import NotebookModal from '../components/NotebookModal';
+import CreateModal from '../components/CreateModal';
+import useNewGroup from '../hooks/useNewGroup';
+import { TYPES } from '../constants';
 
 const Notebook = ({ notebookId, notebookName, notes, ...props }) => {
-	const user = useAuth();
-	const { name: NAME, id: ID } = useParams();
 	//hooks
-	const { updateMetaInfo, addTag, removeTag, addNotebookNote } = useNotesStore();
+	const user = useAuth();
+	const { notebook: NOTEBOOK, group: GROUP, id: ID } = useParams();
+	const { updateNotebookNote, updateGroupNote, addTag, removeTag, addNotebookNote, addGroupNote } = useNotesStore();
 	const [calendarRef, date, handleDateChange] = useCalendar(filterNotesByDate);
-	const { name, handleChange, handleSubmit } = useNewNotebook();
+	const {
+		name: newNotebookName,
+		handleChange: handleChangeNotebook,
+		handleSubmit: handleSubmitNotebook
+	} = useNewNotebook();
+	const {
+		name: newGroupName,
+		handleChange: handleChangeGroup,
+		handleSubmit: handleSubmitGroup
+	} = useNewGroup();
 	//state
 	const [noteCount, setNoteCount] = useState(notes.length);
 	const [filteredNotes, setFilteredNotes] = useState(notes);
@@ -41,7 +52,10 @@ const Notebook = ({ notebookId, notebookName, notes, ...props }) => {
 	const [status, setStatus] = useState('All changes saved');
 	const [calendarModal, showCalendarModal] = useState(false);
 	const [notebookModal, showNotebookModal] = useState(false);
+	const [groupModal, showGroupModal] = useState(false);
+	//refs
 	const notebookRef = useRef();
+	const groupRef = useRef();
 
 	const debouncedChangeHandler = useMemo(() => debounce((id, data) =>
 		update(id, data).then(() => setStatus('All changes saved')), 2000), []);
@@ -55,11 +69,15 @@ const Notebook = ({ notebookId, notebookName, notes, ...props }) => {
 		[]);
 
 	useEffect(() => {
-		console.table({ ID, NAME });
 		showCalendarModal(new Modal(calendarRef.current));
 		showNotebookModal(new Modal(notebookRef.current));
+		showGroupModal(new Modal(groupRef.current));
 		return () => debouncedChangeHandler.cancel();
 	}, []);
+
+	useEffect(() => {
+		console.table({ ID, NOTEBOOK, GROUP });
+	}, [ID, NOTEBOOK, GROUP]);
 
 	useEffect(() => {
 		setNoteCount(notes.length);
@@ -75,10 +93,15 @@ const Notebook = ({ notebookId, notebookName, notes, ...props }) => {
 			let id = uuidv4();
 			setNoteId(id);
 			setTitle('Untitled');
-			await addNotebookNote(user.uid, notebookId, id, 'Untitled', author);
-			props.history.push(`/${notebookName}/${id}`);
+			if (NOTEBOOK) {
+				await addNotebookNote(user.uid, notebookId, id, 'Untitled', author)
+				props.history.push(`/notebooks/${notebookName}/${id}`);
+			} else {
+				await addGroupNote(user.uid, notebookId, id, 'Untitled', author);
+				props.history.push(`/groups/${notebookName}/${id}`);
+			}
 		} catch (e) {
-			console.error(e)
+			console.error(e);
 		}
 	}
 
@@ -103,14 +126,16 @@ const Notebook = ({ notebookId, notebookName, notes, ...props }) => {
 		setTitle(title);
 		setAuthor(author);
 		setTags(tags);
-		props.history.push(`/${notebookName}/${id}`);
+		NOTEBOOK ?
+			props.history.push(`/notebooks/${notebookName}/${id}`) :
+			props.history.push(`/groups/${notebookName}/${id}`)
 	};
 
-	const handleTitle = (e) => {
+	const handleTitle = (e, type) => {
 		setStatus('Saving...');
 		const { value } = e.target;
 		setTitle(value);
-		updateMetaInfo(notebookId, noteId, { title: value });
+		type === TYPES.PERSONAL ? updateNotebookNote(noteId, { title: value }) : updateGroupNote(notebookId, noteId, {title: value })
 		debouncedChangeHandler(noteId, { title: value });
 	};
 
@@ -144,10 +169,16 @@ const Notebook = ({ notebookId, notebookName, notes, ...props }) => {
 	return (
 		<div id='page-content-wrapper' className='row flex-nowrap'>
 			<CalendarPicker date={date} onChangeHandler={handleDateChange} modalRef={calendarRef} />
-			<NotebookModal ref={notebookRef} name={name} onChange={handleChange} onSubmit={(e) => {
-				handleSubmit(e).then(name => {
+			<CreateModal type={TYPES.PERSONAL} ref={notebookRef} name={newNotebookName} onChange={handleChangeNotebook} onSubmit={(e) => {
+				handleSubmitNotebook(e).then(name => {
 					notebookModal.hide();
-					props.history.push(`/${name}`);
+					props.history.push(`/notebooks/${name}`);
+				}).catch((err) => console.error(err));
+			}} />
+			<CreateModal type={TYPES.SHARED} ref={groupRef} name={newGroupName} onChange={handleChangeGroup} onSubmit={(e) => {
+				handleSubmitGroup(e).then(name => {
+					groupModal.hide();
+					props.history.push(`/groups/${name}`);
 				}).catch((err) => console.error(err));
 			}} />
 			<div className='col-sm-4 col-md-3 col-xl-3 bg-light'>
@@ -156,6 +187,7 @@ const Notebook = ({ notebookId, notebookName, notes, ...props }) => {
 						onSearch={handleSearch}
 						onNewNote={createNewNote}
 						onNewNotebook={() => notebookModal.show()}
+						onNewGroupLibrary={() => groupModal.show()}
 					/>
 					<div className='d-flex flex-row align-items-center justify-content-around px-3 py-3'>
 						<div className='d-flex flex-grow-1 align-items-center'>
@@ -177,8 +209,11 @@ const Notebook = ({ notebookId, notebookName, notes, ...props }) => {
 					</div>
 				</div>
 			</div>
+			{/*TODO - add conditional rendering for notebooks and groups*/}
+
 			<div className='col py-3'>
 				<NoteContainer
+					notebookName={notebookName}
 					uid={user.uid}
 					noteId={noteId}
 					status={status}

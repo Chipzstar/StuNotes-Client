@@ -6,8 +6,7 @@ import { useNotesStore } from '../store';
 const useNewNotebook = () => {
 	const user = useAuth();
 	const { notebooks, addNotebook } = useNotesStore();
-	const [id, setId] = useState(notebooks.length ? notebooks[0].id : null);
-	const [name, setName] = useState(notebooks.length ? notebooks[0].name : '');
+	const [name, setName] = useState('');
 
 	async function createNewNotebook(name) {
 		try {
@@ -18,8 +17,7 @@ const useNewNotebook = () => {
 			}
 			let id = nanoid(16);
 			let notebook = await addNotebook(user.uid, id, name, user.displayName);
-			console.log(notebook)
-			setId(id);
+			console.log(notebook);
 		} catch (err) {
 			console.error(err);
 		}
@@ -32,11 +30,11 @@ const useNewNotebook = () => {
 
 	const handleSubmit = async (e) => {
 		e.preventDefault();
-		await createNewNotebook(name)
-		return name
-	}
+		await createNewNotebook(name);
+		return name;
+	};
 
-	return { id, name, handleChange, handleSubmit }
+	return { name, handleChange, handleSubmit };
 };
 
-export default useNewNotebook
+export default useNewNotebook;

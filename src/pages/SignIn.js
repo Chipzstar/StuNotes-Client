@@ -7,6 +7,7 @@ import { SignInSchema } from '../validation';
 import { ErrorMessage, Formik } from 'formik';
 import { useNotesStore } from '../store';
 import { FaFacebookF, FaGoogle } from 'react-icons/fa';
+import { HOME_URL } from '../constants';
 
 const SignIn = props => {
 	const { setNotes, setNotebooks } = useNotesStore();
@@ -15,7 +16,6 @@ const SignIn = props => {
 	const loginAlert = useRef();
 
 	useEffect(() => {
-		console.log('PROPS', props);
 		setModal(new Modal(loginAlert.current));
 	}, []);
 
@@ -51,7 +51,7 @@ const SignIn = props => {
 							.then(({ uid, displayName, metadata: { creationTime } }) => {
 								setNotebooks(uid, displayName, creationTime)
 									.then(() => {
-										setNotes(uid).then(() => props.history.push('/All Notes'));
+										setNotes(uid).then(() => props.history.push(HOME_URL));
 									});
 							})
 							.catch(({ message }) => {

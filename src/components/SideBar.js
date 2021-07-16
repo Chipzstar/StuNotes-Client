@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Dropdown, Overlay, Popover } from 'react-bootstrap';
 import defaultProfile from '../assets/images/default profile.png';
 import { signOutUser } from '../firebase';
@@ -6,20 +6,23 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNotesStore } from '../store';
 import { Link, NavLink, useHistory } from 'react-router-dom';
 import logo from '../assets/images/logo.png';
+import { IoEllipsisVerticalSharp } from 'react-icons/io5';
 import '../stylesheets/App.css';
+import { HOME_URL } from '../constants';
 
 const SideBar = ({ width }) => {
 	const user = useAuth();
-	const history = useHistory()
+	const history = useHistory();
 	const [show, setShow] = useState(false);
-	const [target, setTarget] = useState(null);
+	const [targetNotebook, setNotebookTarget] = useState(null);
+	const [targetGroup, setGroupTarget] = useState(null);
 	const ref = useRef(null);
-	const { notebooks, clearNotes, removeNotebook, renameNotebook } = useNotesStore();
+	const { groups, notebooks, clearAll, removeNotebook, renameNotebook } = useNotesStore();
 
-	const togglePopupMenu = (event) => {
+	const togglePopupMenu = (event, type) => {
 		event.preventDefault();
 		setShow(!show);
-		setTarget(event.target);
+		type === 'notebook' ? setNotebookTarget(event.target) : setGroupTarget(event.target);
 	};
 
 	return (
@@ -45,6 +48,15 @@ const SideBar = ({ width }) => {
 			<div className='offcanvas-body d-flex flex-column flex-shrink-0 align-items-center pt-4 text-dark'>
 				<ul className='list-unstyled ps-0'>
 					<li className='mb-4'>
+						<NavLink
+							to={HOME_URL}
+							className='btn-toggle align-items-center rounded collapsed text-decoration-none'
+							role='button'
+						>
+							My Notes
+						</NavLink>
+					</li>
+					<li className='mb-4'>
 						<a
 							href='#personal-notebook'
 							className='btn-toggle align-items-center rounded collapsed text-decoration-none'
@@ -57,17 +69,20 @@ const SideBar = ({ width }) => {
 						</a>
 						<div id='personal-notebook' className='collapse'>
 							<ul className='btn-toggle-nav list-unstyled fw-normal pb-1 small'>
-								{notebooks.map(({ id, name }, index) => (
-									<li key={id} ref={ref} onBlur={() => setShow(false)}>
+								{notebooks.map(({ id, name }, index) => index !== 0 && (
+									<li key={id} tabIndex={1} onBlur={() => setShow(false)} ref={ref}>
 										<NavLink
-											to={`/${name}`}
+											to={`/notebooks/${name}`}
 											className='link-dark rounded'
-											onContextMenu={index !== 0 ? togglePopupMenu : undefined}>
+										>
 											{name}
 										</NavLink>
+										<span role='button' onClick={(e) => togglePopupMenu(e, 'notebook')}>
+											<IoEllipsisVerticalSharp size={14} />
+										</span>
 										<Overlay
 											show={show}
-											target={target}
+											target={targetNotebook}
 											placement='right'
 											container={ref.current}
 										>
@@ -77,16 +92,19 @@ const SideBar = ({ width }) => {
 														<div
 															className='dropdown-item'
 															onMouseDown={(e) => e.preventDefault()}
-															onClick={() => renameNotebook(user.uid, id, "Notebook 1")}>
+															onClick={() => {
+																renameNotebook(user.uid, id, 'Notebook 1');
+																setShow(false);
+															}}>
 															Rename
 														</div>
 														<div
 															className='dropdown-item'
 															onMouseDown={(e) => e.preventDefault()}
 															onClick={() => {
-																history.push('/All Notes')
-																removeNotebook(user.uid, id)
+																history.push('/notebooks/All Notes');
 																setShow(false);
+																alert('Group removed');
 															}}
 															style={{ color: 'red' }}>Delete
 														</div>
@@ -112,10 +130,50 @@ const SideBar = ({ width }) => {
 						</a>
 						<div id='group-notebook' className='collapse'>
 							<ul className='btn-toggle-nav list-unstyled fw-normal pb-1 small'>
-								<li><a href='#' className='link-dark rounded'>Overview</a></li>
-								<li><a href='#' className='link-dark rounded'>Weekly</a></li>
-								<li><a href='#' className='link-dark rounded'>Monthly</a></li>
-								<li><a href='#' className='link-dark rounded'>Annually</a></li>
+								{groups.map(({ id, name }) => (
+									<li key={id} tabIndex={1} onBlur={() => setShow(false)} ref={ref}>
+										<NavLink
+											to={`/groups/${name}`}
+											className='link-dark rounded'
+										>
+											{name}
+										</NavLink>
+										<span role='button' onClick={(e) => togglePopupMenu(e, 'group')}>
+											<IoEllipsisVerticalSharp size={14} />
+										</span>
+										<Overlay
+											target={targetGroup}
+											show={show}
+											placement='right'
+											container={ref.current}
+										>
+											<Popover id='popover-contained'>
+												<Popover.Body>
+													<div className='menu'>
+														<div
+															className='dropdown-item'
+															onMouseDown={(e) => e.preventDefault()}
+															onClick={() => {
+																renameNotebook(user.uid, id, 'Notebook 1');
+																setShow(false);
+															}}>
+															Rename
+														</div>
+														<div
+															className='dropdown-item'
+															onMouseDown={(e) => e.preventDefault()}
+															onClick={() => {
+																history.push('/notebooks/All Notes');
+																setShow(false);
+															}}
+															style={{ color: 'red' }}>Delete
+														</div>
+													</div>
+												</Popover.Body>
+											</Popover>
+										</Overlay>
+									</li>
+								))}
 							</ul>
 						</div>
 					</li>
@@ -133,28 +191,6 @@ const SideBar = ({ width }) => {
 						</div>
 					</li>
 				</ul>
-				{/*<ul className='nav nav-pills flex-column mb-sm-auto mb-auto' id='menu'>
-				<li className='nav-item mt-4'>
-					<Link to="/notes" className='nav-link align-middle px-0 d-flex flex-row justify-content-center'>
-						<img src={Notes} alt='' width={50} height={50} className='img-fluid' />
-						<span className='ps-4 h1 text-capitalize ms-1 d-none'>Notes</span>
-					</Link>
-				</li>
-				<li className='nav-item mt-4'>
-					<Link to="/groups"
-					   className='nav-link align-middle px-0 d-flex flex-row justify-content-center'>
-						<img src={Team} alt='' width={50} height={50} className='img-fluid' />
-						<span className='ps-4 h1 text-capitalize ms-1 d-none'>Teams</span>
-					</Link>
-				</li>
-				<li className='nav-item mt-4'>
-					<a href='#'
-					   className='nav-link align-middle px-0 d-flex flex-row justify-content-center'>
-						<img src={Trash} alt='' width={50} height={50} className='img-fluid' />
-						<span className='ps-4 h1 text-capitalize ms-1 d-none'>Trash</span>
-					</a>
-				</li>
-			</ul>*/}
 				<div className='d-flex flex-column flex-grow-1 align-items-center justify-content-end w-100'>
 					<hr className='my-2 divider w-100' />
 					<Dropdown className='d-flex flex-column'>
@@ -175,8 +211,9 @@ const SideBar = ({ width }) => {
 							<Dropdown.Item href='#/action-4' disabled>
 								<hr className='dropdown-divider' />
 							</Dropdown.Item>
-							<Dropdown.Item onClick={() => signOutUser().then(() => clearNotes())}>Sign
-								out</Dropdown.Item>
+							<Dropdown.Item onClick={() => signOutUser().then(() => clearAll())}>
+								Sign out
+							</Dropdown.Item>
 						</Dropdown.Menu>
 					</Dropdown>
 				</div>

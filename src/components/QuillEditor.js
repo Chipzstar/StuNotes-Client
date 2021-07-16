@@ -1,7 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import * as Y from 'yjs';
-import { IndexeddbPersistence } from 'y-indexeddb';
 import 'quill/dist/quill.snow.css';
 import Quill from 'quill';
 import QuillCursors from 'quill-cursors';
@@ -9,45 +8,49 @@ import { WebsocketProvider } from 'y-websocket';
 import { QuillBinding } from 'y-quill';
 import withStore from '../hoc/withStore';
 import { AuthContext } from '../contexts/AuthContext';
+import { TYPES } from '../constants';
 
 Quill.register('modules/cursors', QuillCursors);
 
 class QuillEditor extends React.Component {
-	static contextType = AuthContext
+	static contextType = AuthContext;
+
 	constructor(props) {
 		super(props);
 		this.state = {
 			isMounted: null
 		};
-		this.binding = null
-		this.quill = null
-		this.wsProvider = null
-		this.awareness = null
+		this.binding = null;
+		this.quill = null;
+		this.wsProvider = null;
+		this.awareness = null;
 	}
 
 	componentDidMount() {
-		const { notebook, room } = this.props;
+		const { type, notebookId, room } = this.props;
+		console.table({ type, notebookId, room });
 		//this.persistence = new IndexeddbPersistence(room, yDoc);
 		this.yDoc = new Y.Doc({ guid: this.context.uid });
-		console.log(this.yDoc)
+		console.log(this.yDoc);
 
 		this.yText = this.yDoc.getText('quill');
-		console.log(this.yText)
+		console.log(this.yText);
 
-		this.bindEditor(this.yText, room, this.yDoc)
+		this.bindEditor(this.yText, room, this.yDoc);
 		/*
 		this.persistence.on('synced', () => console.log('initial content loaded'));
 		*/
-		this.initObservers(notebook, room)
+		type === TYPES.SHARED ? this.initGroupObservers(notebookId, room) : this.initNotebookObservers(room);
 		window.addEventListener('blur', () => this.quill.blur());
 	}
 
 	shouldComponentUpdate(nextProps, nextState, nextContext) {
-		if (this.props.room !== nextProps.room){
-			this.resetYDoc(nextProps.notebook, nextProps.room)
-			return true
+		if (this.props.room !== nextProps.room) {
+			console.table({type: nextProps.type, notebookId: nextProps.notebookId, room: nextProps.room})
+			this.resetYDoc(nextProps.type, nextProps.notebookId, nextProps.room);
+			return true;
 		}
-		return false
+		return false;
 	}
 
 	componentWillUnmount() {
@@ -56,38 +59,56 @@ class QuillEditor extends React.Component {
 		this.yDoc.destroy();
 	}
 
-	initObservers(notebook, room) {
+	initNotebookObservers(room) {
 		this.yText.observe(() => {
-			let text = this.quill.getText()
-			let index = this.props.store.notebooks[0].notes.findIndex(item => item.id === room)
-
-			if (text.length === 100 && this.props.store.notebooks[0].notes[index]['description'] !== text){
-				this.props.store.updateMetaInfo(notebook, room, {description: text.padEnd(103, "...")})
-				this.props.onChange(room, {description: text.padEnd(103, "...")})
-			} else if (text.length < 100 && this.props.store.notebooks[0].notes[index]['description'] !== text) {
-				this.props.store.updateMetaInfo(notebook, room, {description: text})
-				this.props.onChange(room, {description: text})
+			let text = this.quill.getText();
+			let index = this.props.store.notebooks[0].notes.findIndex(item => item.id === room);
+			if (text.length < 100 && this.props.store.notebooks[0].notes[index]['description'] !== text) {
+				this.props.store.updateNotebookNote(room, { description: text });
+				this.props.onChange(room, { description: text });
+			} else if (text.length === 100 && this.props.store.notebooks[0].notes[index]['description'] !== text) {
+				this.props.store.updateNotebookNote(room, { description: text.padEnd(103, '...') });
+				this.props.onChange(room, { description: text.padEnd(103, '...') });
 			}
-		})
-
+		});
 		this.wsProvider.on('status', event => {
 			console.log(event.status);
 		});
-		this.wsProvider.on('sync', (isSynced) => console.log(isSynced ? "synced" : "not synced"))
+		this.wsProvider.on('sync', (isSynced) => console.log(isSynced ? 'synced' : 'not synced'));
 	}
 
-	resetYDoc = (notebook, room) => {
+	initGroupObservers(id, room) {
+		this.yText.observe(() => {
+			let text = this.quill.getText();
+			if (text.length < 100 && this.props.store.groups.find(item => item.id === id)['description'] !== text) {
+				this.props.store.updateGroupNote(id, room, { description: text });
+				this.props.onChange(room, { description: text });
+			} else if (text.length === 100 && this.props.store.groups.find(item => item.id === id)['description'] !== text) {
+				this.props.store.updateGroupNote(id, room, { description: text.padEnd(103, '...') });
+				this.props.onChange(room, { description: text.padEnd(103, '...') });
+			}
+		});
+		this.wsProvider.on('status', event => {
+			console.log(event.status);
+		});
+		this.wsProvider.on('sync', (isSynced) => console.log(isSynced ? 'synced' : 'not synced'));
+	}
+
+	resetYDoc = (type, notebookId, room) => {
 		this.wsProvider.destroy();
 		this.yDoc = new Y.Doc({ guid: this.context.uid });
 		this.yText = this.yDoc.getText('quill');
-		//console.count("BINDING TO EDITOR")
-		this.bindEditor(this.yText, room, this.yDoc)
-		this.initObservers(notebook, room)
-	}
+		this.bindEditor(this.yText, room, this.yDoc);
+		if (type === TYPES.SHARED) {
+			this.initGroupObservers(notebookId, room);
+		} else {
+			this.initNotebookObservers(room);
+		}
+	};
 
 	bindEditor = (yText, room) => {
 		if (this.binding) {
-			this.binding.destroy()
+			this.binding.destroy();
 		}
 		if (this.quill === null) {
 			this.quill = new Quill(document.querySelector('#editor'), {
@@ -105,13 +126,13 @@ class QuillEditor extends React.Component {
 			});
 		}
 		this.wsProvider = new WebsocketProvider('ws://localhost:1234', room, this.yDoc); // change to
-		this.binding = new QuillBinding(this.yText, this.quill, this.wsProvider.awareness)
-	}
+		this.binding = new QuillBinding(this.yText, this.quill, this.wsProvider.awareness);
+	};
 
 	render() {
 		return (
 			<div>
-				<div id='toolbar' className="border-0">
+				<div id='toolbar' className='border-0'>
 				<span className='ql-formats'>
 					<select className='ql-font' />
 					<select defaultValue={''} onChange={e => e.persist()} className='ql-header'>
@@ -161,7 +182,7 @@ class QuillEditor extends React.Component {
 			      <button className='ql-clean' />
 			    </span>
 				</div>
-				<div id='editor' className='text-editor border-0' style={{fontSize: "100%"}}/>
+				<div id='editor' className='text-editor border-0' style={{ fontSize: '100%' }} />
 			</div>
 		);
 	}

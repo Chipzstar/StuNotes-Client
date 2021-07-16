@@ -6,6 +6,7 @@ import '../stylesheets/App.css';
 import { registerNewUser } from '../firebase';
 import { FaFacebookF, FaGoogle } from 'react-icons/fa';
 import { useNotesStore } from '../store';
+import { HOME_URL } from '../constants';
 
 const SignUp = props => {
 	const [modal, setModal] = useState(false);
@@ -52,7 +53,7 @@ const SignUp = props => {
 						registerNewUser(values)
 							.then(({ uid, displayName }) => {
 								createDefaultNotebook(uid, displayName);
-								props.history.push('/All Notes');
+								props.history.push(HOME_URL);
 							})
 							.catch(({ message }) => {
 								console.error(message);

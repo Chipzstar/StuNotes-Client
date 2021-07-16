@@ -27,12 +27,7 @@ import '../stylesheets/App.css';
 import 'react-calendar/dist/Calendar.css';
 import NoteContainer from '../components/NoteContainer';
 
-const connectDoc = (doc) => {
-	console.log('connected to a provider with room', doc.guid);
-	return () => console.log('disconnected', doc.guid);
-};
-
-const Groups = props => {
+const Group = props => {
 	const user = useAuth();
 	let { id: ID } = useParams();
 
@@ -51,13 +46,9 @@ const Groups = props => {
 			filteredNotes.sort((a, b) => a.title < b.title ? -1 : b.title < a.title ? 1 : 0);
 	}
 
-	//refs
-	const yDoc = useYDoc(user.uid, connectDoc);
-	const yDocList = yDoc.getArray('notes');
 	const calendarRef = useRef();
 	//hooks
 	const { groups, addGroup } = useGroupsStore();
-	const { data, push } = useYArray(yDocList);
 	const [ref, { width: WIDTH }] = useMeasure();
 	const [date, handleDateChange] = useCalendar(filterNotesByDate);
 	const [handleSearch] = useSearch(debouncedSearch)
@@ -157,6 +148,6 @@ const Groups = props => {
 	);
 };
 
-Groups.propTypes = {};
+Group.propTypes = {};
 
-export default Groups;
+export default Group;

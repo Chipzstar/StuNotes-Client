@@ -5,7 +5,7 @@ import PropTypes from 'prop-types';
 import { Button, ButtonGroup, Dropdown } from 'react-bootstrap';
 import { AiOutlinePlus } from 'react-icons/ai';
 
-const NotebookNav = ({ onSearch, onNewNote, onNewNotebook }) => {
+const NotebookNav = ({ onSearch, onNewNote, onNewNotebook, onNewGroupLibrary }) => {
 	return (
 		<div className='d-flex flex-row align-items-center px-2 py-3'>
 			<div
@@ -32,7 +32,7 @@ const NotebookNav = ({ onSearch, onNewNote, onNewNotebook }) => {
 					<Dropdown.Menu>
 						<Dropdown.Item eventKey="1" onClick={onNewNote}>New Note</Dropdown.Item>
 						<Dropdown.Item eventKey="2" onClick={onNewNotebook}>New Notebook</Dropdown.Item>
-						<Dropdown.Item eventKey="3">New Team library</Dropdown.Item>
+						<Dropdown.Item eventKey="3" onClick={onNewGroupLibrary}>New Group Notebook</Dropdown.Item>
 					</Dropdown.Menu>
 				</Dropdown>
 			</div>
@@ -43,7 +43,8 @@ const NotebookNav = ({ onSearch, onNewNote, onNewNotebook }) => {
 NotebookNav.propTypes = {
 	onSearch: PropTypes.func.isRequired,
 	onNewNote: PropTypes.func.isRequired,
-	onNewNotebook: PropTypes.func.isRequired
+	onNewNotebook: PropTypes.func.isRequired,
+	onNewGroupLibrary: PropTypes.func.isRequired
 };
 
 export default NotebookNav;

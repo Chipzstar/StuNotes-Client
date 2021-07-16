@@ -63,7 +63,7 @@ export const signOutUser = async () => {
 	});
 };
 
-export const createNote = async (uid, notebookId, docId, title, author) => {
+export const createNotebookNote = async (uid, notebookId, docId, title, author) => {
 	return new Promise(async (resolve, reject) => {
 		try {
 			const noteRef = db.doc(`root/${uid}/notes/${docId}`);
@@ -77,6 +77,7 @@ export const createNote = async (uid, notebookId, docId, title, author) => {
 				title,
 				author,
 				notebookId,
+				groupId: null,
 				createdAt: new Date(),
 				description: '',
 				tags: []
@@ -184,13 +185,13 @@ export const fetchNotebooks = async (uid, author) => {
 	});
 };
 
-export const createNotebook = async (uid, id, name, author) => {
+export const createNotebook = async (uid, id, name, owner) => {
 	return new Promise(async (resolve, reject) => {
 		try {
 			const Ref = db.collection(`root/${uid}/notebooks`);
 			await Ref.doc(id).set({
 				name,
-				author,
+				owner,
 				createdAt: new Date(),
 				notes: []
 			});
@@ -216,23 +217,27 @@ export const updateNotebook = async (uid, docId, data) => {
 	});
 };
 
-export const deleteNotebook = async (uid, id) => {
+export const deleteNotebook = async (uid, docId) => {
 	return new Promise(async (resolve, reject) => {
 		try {
-			const Ref = db.collection(`root/${uid}/notebooks`);
-			await Ref.doc(id).delete();
-			resolve('Note Deleted!');
+			const notebookRef = db.doc(`root/${uid}/notebooks/${docId}`);
+			const { notes } = (await notebookRef.get()).data();
+			for (let ref of notes){
+				await ref.delete()
+			}
+			await notebookRef.delete();
+			resolve('Notebook Deleted!');
 		} catch (err) {
 			reject(err);
 		}
 	});
 };
 
-export const createGroup = async (uid, id, name, owner) => {
+export const createGroup = async (uid, docId, name, owner) => {
 	return new Promise(async (resolve, reject) => {
 		try {
-			const Ref = db.collection(`root/${uid}/groups`);
-			await Ref.doc(id).set({
+			const Ref = db.doc(`root/${uid}/groups/${docId}`);
+			await Ref.set({
 				name,
 				owner,
 				createdAt: new Date(),
@@ -240,6 +245,33 @@ export const createGroup = async (uid, id, name, owner) => {
 				members: []
 			});
 			resolve();
+		} catch (e) {
+			console.error(e);
+			reject(e);
+		}
+	});
+};
+
+export const createGroupNote = async (uid, groupId, docId, title, author) => {
+	return new Promise(async (resolve, reject) => {
+		try {
+			const noteRef = db.doc(`root/${uid}/notes/${docId}`);
+			if (uid !== groupId) {
+				const groupRef = db.doc(`root/${uid}/groups/${groupId}`);
+				await groupRef.update({
+					notes: firebase.firestore.FieldValue.arrayUnion(noteRef)
+				});
+			}
+			await noteRef.set({
+				title,
+				author,
+				notebookId: null,
+				groupId,
+				createdAt: new Date(),
+				description: '',
+				tags: []
+			});
+			resolve(`Note Created Successfully!`)
 		} catch (e) {
 			console.error(e);
 			reject(e);

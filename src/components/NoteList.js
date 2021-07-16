@@ -7,18 +7,17 @@ import logo from '../assets/images/logo.png';
 import Toast from 'react-bootstrap/Toast';
 import ToastContainer from 'react-bootstrap/ToastContainer';
 import { useNotesStore } from '../store';
-import { useParams } from 'react-router-dom';
-import { deleteNote } from '../firebase';
+import { useHistory, useParams } from 'react-router-dom';
 import { Scrollbars } from 'react-custom-scrollbars';
 import { useMeasure } from 'react-use';
-import { notebookSchema } from '../schemas';
 
 const NoteList = ({ uid, filteredData, onSelect }) => {
-	let { name: NAME ,id: ID } = useParams();
+	let { notebook: NOTEBOOK, id: ID, group: GROUP } = useParams();
 	const [showToast, setShow] = useState(false);
-	const { removeNotebookNote } = useNotesStore(useCallback(state => state, [ID, NAME]));
+	const { notebooks, removeNotebookNote } = useNotesStore(useCallback(state => state, [ID, NOTEBOOK]));
+	const history = useHistory()
 	const [divRef1, { height:outerDivHeight }] = useMeasure();
-	const [divRef2, { height:innerDivHeight } ] = useMeasure();
+	const [divRef2 ] = useMeasure();
 
 	/*useEffect(() => {
 		console.log("inner", innerDivHeight)
@@ -67,7 +66,10 @@ const NoteList = ({ uid, filteredData, onSelect }) => {
 							type='button'
 							className='btn bg-primary text-black fw-bold'
 							data-bs-dismiss='modal'
-							onClick={() => removeNotebookNote(uid, ID).then(() => setShow(true))}
+							onClick={() => removeNotebookNote(uid, ID).then(() => {
+								setShow(true)
+								history.goBack()
+							})}
 						>
 							Yes
 						</button>
