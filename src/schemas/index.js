@@ -1,6 +1,7 @@
 export const notebookNoteSchema = {
 	id: '',
 	notebookId: '',
+	groupId: null,
 	createdAt: new Date(),
 	author: '',
 	description: '',
@@ -10,6 +11,7 @@ export const notebookNoteSchema = {
 
 export const groupNoteSchema = {
 	id: '',
+	notebookId: null,
 	groupId: '',
 	createdAt: new Date(),
 	author: '',

@@ -18,13 +18,24 @@ const Dashboard = props => {
 	const { name, handleChange, handleSubmit } = useNewNotebook();
 	const notebookRef = useRef();
 
-	const currentId = useMemo(() => NOTEBOOK ?
-		notebooks.find(notebook => notebook.name === NOTEBOOK).id :
-		notebooks[0].id, [ID, NOTEBOOK]);
-
-	const currentNotes = useMemo(() => NOTEBOOK ?
-		notebooks.find(notebook => notebook.name === NOTEBOOK).notes :
-		notebooks[0].notes, [ID, NOTEBOOK, notebooks]);
+	const { id: currentId, notes: currentNotes } = useMemo(() => {
+		console.table({
+			ID,
+			NOTEBOOK,
+			GROUP,
+			notebooks,
+			groups
+		})
+		if (NOTEBOOK) {
+			let { id, notes } = notebooks.find(notebook => notebook.name === NOTEBOOK)
+			return { id, notes }
+		} else if (GROUP) {
+			let group = groups.find(group => group.name === GROUP)
+			return group ? { id: group.id, notes: group.notes } : { id: notebooks[0].id, notes: notebooks[0].notes }
+		} else {
+			return { id: notebooks[0].id, notes: notebooks[0].notes}
+		}
+	}, [ID, NOTEBOOK, GROUP, notebooks, groups]);
 
 	useEffect(() => {
 		setShowModal(new Modal(notebookRef.current));
@@ -52,9 +63,9 @@ const Dashboard = props => {
 					notes={currentNotes}
 				/> : GROUP ?
 					<Notebook
-						notebookId={groups.find(group => group.name === GROUP).id}
+						notebookId={currentId}
 						notebookName={GROUP}
-						notes={groups.find(group => group.name === GROUP).notes}
+						notes={currentNotes}
 					/> : (
 						<div
 							className='d-flex min-vh-100 flex-column justify-content-center align-items-center mx-auto py-3'>

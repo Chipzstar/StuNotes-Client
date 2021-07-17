@@ -7,17 +7,20 @@ import { useNotesStore } from '../store';
 import { Link, NavLink, useHistory } from 'react-router-dom';
 import logo from '../assets/images/logo.png';
 import { IoEllipsisVerticalSharp } from 'react-icons/io5';
-import '../stylesheets/App.css';
 import { HOME_URL } from '../constants';
+import '../stylesheets/App.css';
 
 const SideBar = ({ width }) => {
+	//hooks
 	const user = useAuth();
 	const history = useHistory();
+	const { groups, notebooks, clearAll, removeNotebook, removeGroup } = useNotesStore();
+	//state
 	const [show, setShow] = useState(false);
 	const [targetNotebook, setNotebookTarget] = useState(null);
 	const [targetGroup, setGroupTarget] = useState(null);
+	//refs
 	const ref = useRef(null);
-	const { groups, notebooks, clearAll, removeNotebook, renameNotebook } = useNotesStore();
 
 	const togglePopupMenu = (event, type) => {
 		event.preventDefault();
@@ -42,8 +45,12 @@ const SideBar = ({ width }) => {
 					</Link>
 					<h4 className='offcanvas-title' id='offcanvasExampleLabel'>StuNotes</h4>
 				</div>
-				<button type='button' className='btn-close text-reset' data-bs-dismiss='offcanvas'
-				        aria-label='Close' />
+				<button
+					type='button'
+					className='btn-close text-reset'
+					data-bs-dismiss='offcanvas'
+					aria-label='Close'
+				/>
 			</div>
 			<div className='offcanvas-body d-flex flex-column flex-shrink-0 align-items-center pt-4 text-dark'>
 				<ul className='list-unstyled ps-0'>
@@ -93,7 +100,7 @@ const SideBar = ({ width }) => {
 															className='dropdown-item'
 															onMouseDown={(e) => e.preventDefault()}
 															onClick={() => {
-																renameNotebook(user.uid, id, 'Notebook 1');
+																alert("Renaming Notebook")
 																setShow(false);
 															}}>
 															Rename
@@ -101,11 +108,13 @@ const SideBar = ({ width }) => {
 														<div
 															className='dropdown-item'
 															onMouseDown={(e) => e.preventDefault()}
-															onClick={() => {
-																history.push('/notebooks/All Notes');
-																setShow(false);
-																alert('Group removed');
-															}}
+															onClick={() => removeNotebook(user.uid, id)
+																.then(() => {
+																	history.push(HOME_URL);
+																	setShow(false);
+																})
+																.catch(err => console.error(err))
+															}
 															style={{ color: 'red' }}>Delete
 														</div>
 													</div>
@@ -154,7 +163,7 @@ const SideBar = ({ width }) => {
 															className='dropdown-item'
 															onMouseDown={(e) => e.preventDefault()}
 															onClick={() => {
-																renameNotebook(user.uid, id, 'Notebook 1');
+																alert("Renaming Notebook")
 																setShow(false);
 															}}>
 															Rename
@@ -162,10 +171,13 @@ const SideBar = ({ width }) => {
 														<div
 															className='dropdown-item'
 															onMouseDown={(e) => e.preventDefault()}
-															onClick={() => {
-																history.push('/notebooks/All Notes');
-																setShow(false);
-															}}
+															onClick={() => removeGroup(user.uid, id)
+																.then(() => {
+																	history.push(HOME_URL)
+																	setShow(false);
+																})
+																.catch((err) => console.error(err))
+															}
 															style={{ color: 'red' }}>Delete
 														</div>
 													</div>

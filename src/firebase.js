@@ -1,6 +1,7 @@
 import firebase from 'firebase/app';
 import 'firebase/auth';
 import 'firebase/firestore';
+import { TYPES } from './constants';
 
 const app = firebase.initializeApp({
 	apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
@@ -104,16 +105,18 @@ export const updateNote = async (uid, docId, data) => {
 	});
 };
 
-export const deleteNote = async (uid, notebookId, noteId) => {
+export const deleteNote = async (uid, type, notebookId, noteId) => {
 	return new Promise(async (resolve, reject) => {
 		try {
+			console.table({uid, type, notebookId, noteId})
 			const noteRef = db.doc(`root/${uid}/notes/${noteId}`);
 			if (uid !== notebookId) {
-				const notebookRef = db.doc(`root/${uid}/notebooks/${notebookId}`);
-				await notebookRef.update({
+				let path = type === TYPES.SHARED ? `root/${uid}/groups/${notebookId}` : `root/${uid}/notebooks/${notebookId}`
+				const Ref = db.doc(path);
+				await Ref.update({
 					notes: firebase.firestore.FieldValue.arrayRemove(noteRef)
 				});
-				console.log(await notebookRef.get());
+				console.log(await Ref.get());
 			}
 			await noteRef.delete();
 			resolve('Note Deleted Successfully!');
@@ -129,9 +132,9 @@ export const fetchNotes = async (uid) => {
 			const Ref = db.collection(`root/${uid}/notes`);
 			const snapshot = await Ref.get();
 			let notes = snapshot.docs.map(doc => {
-				let { title, author, createdAt, description, tags, notebookId } = doc.data();
+				let { title, author, createdAt, description, tags, notebookId, groupId } = doc.data();
 				createdAt = createdAt.toDate();
-				return { id: doc.id, title, author, createdAt, description, tags, notebookId };
+				return { id: doc.id, title, author, createdAt, description, tags, notebookId, groupId };
 			});
 			resolve(notes);
 		} catch (err) {
@@ -168,15 +171,15 @@ export const deleteTag = async (uid, docId, tag) => {
 	});
 };
 
-export const fetchNotebooks = async (uid, author) => {
+export const fetchNotebooks = async (uid) => {
 	return new Promise(async (resolve, reject) => {
 		try {
 			const Ref = db.collection(`root/${uid}/notebooks`);
 			const snapshot = await Ref.get();
 			let notebooks = snapshot.docs.map(doc => {
-				let { name, createdAt, notes } = doc.data();
+				let { name, createdAt, owner, notes } = doc.data();
 				createdAt = createdAt.toDate();
-				return { id: doc.id, name, author, createdAt, notes: [] };
+				return { id: doc.id, name, owner, createdAt, notes: [] };
 			});
 			resolve(notebooks);
 		} catch (err) {
@@ -252,6 +255,22 @@ export const createGroup = async (uid, docId, name, owner) => {
 	});
 };
 
+export const deleteGroup = async (uid, docId) => {
+	return new Promise(async (resolve, reject) => {
+		try {
+			const groupRef = db.doc(`root/${uid}/groups/${docId}`);
+			const { notes } = (await groupRef.get()).data();
+			for (let ref of notes){
+				await ref.delete()
+			}
+			await groupRef.delete();
+			resolve('Group Deleted!');
+		} catch (err) {
+			reject(err);
+		}
+	});
+};
+
 export const createGroupNote = async (uid, groupId, docId, title, author) => {
 	return new Promise(async (resolve, reject) => {
 		try {
@@ -278,6 +297,23 @@ export const createGroupNote = async (uid, groupId, docId, title, author) => {
 		}
 	});
 };
+
+export const fetchGroups = async (uid) => {
+	return new Promise(async (resolve, reject) => {
+		try {
+			const Ref = db.collection(`root/${uid}/groups`);
+			const snapshot = await Ref.get();
+			let groups = snapshot.docs.map(doc => {
+				let { name, createdAt, owner, members } = doc.data();
+				createdAt = createdAt.toDate();
+				return { id: doc.id, name, owner, createdAt, notes: [], members };
+			});
+			resolve(groups);
+		} catch (err) {
+			reject(err);
+		}
+	});
+}
 
 export const db = app.firestore();
 

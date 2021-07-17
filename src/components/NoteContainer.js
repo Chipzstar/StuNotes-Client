@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useParams } from 'react-router-dom';
 import document from '../assets/svg/document.svg';
@@ -9,11 +9,13 @@ import QuillEditor from './QuillEditor';
 import { useNotesStore } from '../store';
 import { TYPES } from '../constants';
 import Tag from './Tag';
+import MembersContainer from './MembersContainer';
 
 const NoteContainer = ({
+	                       notebookId,
+	                       notebookName,
 	                       status,
 	                       author,
-	                       notebookName,
 	                       noteId,
 	                       title,
 	                       tags,
@@ -35,22 +37,23 @@ const NoteContainer = ({
 
 	const type = useMemo(() => NOTEBOOK ? TYPES.PERSONAL : GROUP ? TYPES.SHARED : null, [NOTEBOOK, GROUP]);
 
-	const notebookId = useMemo(() => {
+	/*const notebookId = useMemo(() => {
 		if (NOTEBOOK) {
-			return notebooks.find(item => item.name === NOTEBOOK).id
+			return notebooks.find(item => item.name === NOTEBOOK).id;
 		} else if (GROUP) {
-			return groups.find(item => item.name === GROUP).id
+			return groups.find(item => item.name === GROUP).id;
 		} else {
-			return notebooks[0].id
+			return notebooks[0].id;
 		}
-	}, [NOTEBOOK, GROUP]);
+	}, [NOTEBOOK, GROUP]);*/
 
 	//TODO - debug editor slow response when typing
 	const hasNotes = useMemo(() => {
 		if (NOTEBOOK) {
 			return notebooks.find(item => item.name === NOTEBOOK).notes.length;
 		} else if (GROUP) {
-			return groups.find(item => item.name === GROUP).notes.length;
+			let group = groups.find(item => item.name === GROUP)
+			return group && group.notes.length;
 		} else return false;
 	}, [NOTEBOOK, GROUP, notebooks, groups]);
 
@@ -122,6 +125,11 @@ const NoteContainer = ({
 							onChange={onDescriptionChange}
 						/>
 					</div>
+					{GROUP && (
+						<div className="my-5">
+							<MembersContainer />
+						</div>
+					)}
 				</div>
 			) : (
 				<div className='d-flex min-vh-100 flex-column justify-content-center align-items-center mx-auto py-3'>
@@ -141,6 +149,8 @@ const NoteContainer = ({
 };
 
 NoteContainer.propTypes = {
+	notebookId: PropTypes.string.isRequired,
+	notebookName: PropTypes.string.isRequired,
 	noteId: PropTypes.string.isRequired,
 	title: PropTypes.string.isRequired,
 	author: PropTypes.string.isRequired,

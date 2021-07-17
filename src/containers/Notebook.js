@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { useParams, withRouter } from 'react-router-dom';
+import { useParams, useHistory } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
 import moment from 'moment';
 import debounce from 'lodash.debounce';
@@ -9,25 +9,26 @@ import NoteList from '../components/NoteList';
 import NoteContainer from '../components/NoteContainer';
 import NotebookNav from '../components/NotebookNav';
 import CalendarPicker from '../components/CalendarPicker';
+import CreateModal from '../components/CreateModal';
 import { VscCalendar } from 'react-icons/vsc';
 import { RiBookletLine } from 'react-icons/ri';
 import { AiOutlineSortAscending } from 'react-icons/ai';
 import { Modal } from 'bootstrap';
+import { TYPES } from '../constants';
 //hooks
 import { useNotesStore } from '../store';
 import { updateNote } from '../firebase';
 import useCalendar from '../hooks/useCalendar';
+import useNewNotebook from '../hooks/useNewNotebook';
+import useNewGroup from '../hooks/useNewGroup';
 //styles
 import '../stylesheets/App.css';
 import 'react-calendar/dist/Calendar.css';
-import useNewNotebook from '../hooks/useNewNotebook';
-import CreateModal from '../components/CreateModal';
-import useNewGroup from '../hooks/useNewGroup';
-import { TYPES } from '../constants';
 
-const Notebook = ({ notebookId, notebookName, notes, ...props }) => {
+const Notebook = ({ notebookId, notebookName, notes }) => {
 	//hooks
 	const user = useAuth();
+	const history = useHistory();
 	const { notebook: NOTEBOOK, group: GROUP, id: ID } = useParams();
 	const { updateNotebookNote, updateGroupNote, addTag, removeTag, addNotebookNote, addGroupNote } = useNotesStore();
 	const [calendarRef, date, handleDateChange] = useCalendar(filterNotesByDate);
@@ -41,13 +42,14 @@ const Notebook = ({ notebookId, notebookName, notes, ...props }) => {
 		handleChange: handleChangeGroup,
 		handleSubmit: handleSubmitGroup
 	} = useNewGroup();
+	//memo
+	const noteId = useMemo(() => ID ? ID : notes.length ? notes[0].id : user.uid, [ID, notes]);
 	//state
 	const [noteCount, setNoteCount] = useState(notes.length);
 	const [filteredNotes, setFilteredNotes] = useState(notes);
 	const [sortOrder, setSort] = useState('default');
 	const [title, setTitle] = useState(notes.length ? notes[0].title : 'Untitled');
 	const [author, setAuthor] = useState(user.displayName);
-	const [noteId, setNoteId] = useState(notes.length ? notes[0].id : user.uid);
 	const [tags, setTags] = useState(notes.length ? notes[0].tags : []);
 	const [status, setStatus] = useState('All changes saved');
 	const [calendarModal, showCalendarModal] = useState(false);
@@ -76,29 +78,24 @@ const Notebook = ({ notebookId, notebookName, notes, ...props }) => {
 	}, []);
 
 	useEffect(() => {
-		console.table({ ID, NOTEBOOK, GROUP });
-	}, [ID, NOTEBOOK, GROUP]);
-
-	useEffect(() => {
 		setNoteCount(notes.length);
 		setFilteredNotes(notes);
 	}, [notes]);
 
 	function filterNotesByDate(date) {
-		setFilteredNotes(prevState => notes.filter(item => moment(item.createdAt).startOf('day').isSameOrBefore(date)));
+		setFilteredNotes(() => notes.filter(item => moment(item.createdAt).startOf('day').isSameOrBefore(date)));
 	}
 
 	async function createNewNote() {
 		try {
 			let id = uuidv4();
-			setNoteId(id);
 			setTitle('Untitled');
 			if (NOTEBOOK) {
 				await addNotebookNote(user.uid, notebookId, id, 'Untitled', author)
-				props.history.push(`/notebooks/${notebookName}/${id}`);
+				history.push(`/notebooks/${notebookName}/${id}`);
 			} else {
 				await addGroupNote(user.uid, notebookId, id, 'Untitled', author);
-				props.history.push(`/groups/${notebookName}/${id}`);
+				history.push(`/groups/${notebookName}/${id}`);
 			}
 		} catch (e) {
 			console.error(e);
@@ -122,13 +119,12 @@ const Notebook = ({ notebookId, notebookName, notes, ...props }) => {
 	};
 
 	const handleDocSelection = (id, title, author, tags) => {
-		setNoteId(id);
 		setTitle(title);
 		setAuthor(author);
 		setTags(tags);
 		NOTEBOOK ?
-			props.history.push(`/notebooks/${notebookName}/${id}`) :
-			props.history.push(`/groups/${notebookName}/${id}`)
+			history.push(`/notebooks/${notebookName}/${id}`) :
+			history.push(`/groups/${notebookName}/${id}`)
 	};
 
 	const handleTitle = (e, type) => {
@@ -172,13 +168,13 @@ const Notebook = ({ notebookId, notebookName, notes, ...props }) => {
 			<CreateModal type={TYPES.PERSONAL} ref={notebookRef} name={newNotebookName} onChange={handleChangeNotebook} onSubmit={(e) => {
 				handleSubmitNotebook(e).then(name => {
 					notebookModal.hide();
-					props.history.push(`/notebooks/${name}`);
+					history.push(`/notebooks/${name}`);
 				}).catch((err) => console.error(err));
 			}} />
 			<CreateModal type={TYPES.SHARED} ref={groupRef} name={newGroupName} onChange={handleChangeGroup} onSubmit={(e) => {
 				handleSubmitGroup(e).then(name => {
 					groupModal.hide();
-					props.history.push(`/groups/${name}`);
+					history.push(`/groups/${name}`);
 				}).catch((err) => console.error(err));
 			}} />
 			<div className='col-sm-4 col-md-3 col-xl-3 bg-light'>
@@ -213,6 +209,7 @@ const Notebook = ({ notebookId, notebookName, notes, ...props }) => {
 
 			<div className='col py-3'>
 				<NoteContainer
+					notebookId={notebookId}
 					notebookName={notebookName}
 					uid={user.uid}
 					noteId={noteId}
@@ -231,4 +228,4 @@ const Notebook = ({ notebookId, notebookName, notes, ...props }) => {
 	);
 };
 
-export default withRouter(Notebook);
+export default Notebook;

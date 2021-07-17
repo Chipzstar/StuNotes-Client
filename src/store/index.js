@@ -1,18 +1,22 @@
 import create from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
-import { notebookNoteSchema, groupNoteSchema, groupSchema, notebookSchema } from '../schemas';
+import { groupNoteSchema, groupSchema, notebookNoteSchema, notebookSchema } from '../schemas';
 import {
 	createGroup,
-	createNotebookNote,
+	createGroupNote,
 	createNotebook,
+	createNotebookNote,
 	createTag,
+	deleteGroup,
 	deleteNote,
 	deleteNotebook,
 	deleteTag,
+	fetchGroups,
 	fetchNotebooks,
 	fetchNotes,
-	updateNotebook, createGroupNote
+	updateNotebook
 } from '../firebase';
+import { TYPES } from '../constants';
 
 let notesStore = (set, get) => ({
 	notebooks: [],
@@ -27,18 +31,20 @@ let notesStore = (set, get) => ({
 			notes: []
 		}]
 	})),
-	setNotebooks: async (uid, author, createdAt) => {
-		let notebooks = await fetchNotebooks(uid, author);
+	setNotebooks: async (uid, owner, createdAt) => {
+		let notebooks = await fetchNotebooks(uid);
+		let groups = await fetchGroups(uid);
 		let defaultNotebook = {
 			...notebookSchema,
 			id: uid,
-			author,
-			name: 'All Notes',
+			owner,
+			name: 'My Notes',
 			createdAt,
 			notes: []
 		};
 		set(state => ({
-			notebooks: [defaultNotebook, ...notebooks]
+			notebooks: [defaultNotebook, ...notebooks],
+			groups: [...groups]
 		}));
 	},
 	setNotes: async (uid) => {
@@ -46,8 +52,12 @@ let notesStore = (set, get) => ({
 		set(state => ({
 			notebooks: state.notebooks.map((notebook, index) => index === 0 ? {
 				...notebook,
-				notes: allNotes
-			} : { ...notebook, notes: allNotes.filter(item => item.notebookId === notebook.id) })
+				notes: allNotes.filter(item => item.notebookId !== null)
+			} : { ...notebook, notes: allNotes.filter(item => item.notebookId === notebook.id) }),
+			groups: state.groups.map(group => ({
+				...group,
+				notes: allNotes.filter(item => item.groupId === group.id)
+			}))
 		}));
 	},
 	addNotebook: async (uid, id, name, owner) => {
@@ -81,16 +91,20 @@ let notesStore = (set, get) => ({
 					...notebook,
 					notes: notebook.notes.map(note => note.id === noteId ? { ...note, ...data } : note)
 				} : notebook)
-		}))
+		}));
 	},
 	updateGroupNote: (groupId, noteId, data) => {
 		set(state => ({
+			notebooks: state.notebooks.map((notebook, index) => index === 0 ? {
+				...notebook,
+				notes: notebook.notes.map(note => note.id === noteId ? { ...note, ...data } : note )
+			} : notebook),
 			groups: state.groups
 				.map(group => group.id === groupId ? {
 					...group,
 					notes: group.notes.map(note => note.id === noteId ? { ...note, ...data } : note)
 				} : group)
-		}))
+		}));
 	},
 	addTag: async (uid, notebookName, id, tag) => {
 		await createTag(uid, id, tag);
@@ -136,15 +150,20 @@ let notesStore = (set, get) => ({
 			} : item)
 		}));
 	},
-	removeNotebookNote: async (uid, id) => {
-		let { notebookId } = get().notebooks[0].notes.find(item => item.id === id);
-		let result = await deleteNote(uid, notebookId, id);
+	removeNote: async (uid, type, id) => {
+		let note = get().notebooks[0].notes.find(item => item.id === id);
+		let collectionId = type === TYPES.PERSONAL ? note.notebookId : note.groupId
+		let result = await deleteNote(uid, type, collectionId, id);
 		console.log(result);
 		set(state => ({
-			notebooks: state.notebooks.map((notebook, index) => index === 0 || notebook.id === notebookId ? {
+			notebooks: state.notebooks.map((notebook, index) => index === 0 || notebook.id === collectionId ? {
 				...notebook,
 				notes: notebook.notes.filter(note => note.id !== id)
-			} : notebook)
+			} : notebook),
+			groups: state.groups.map(group => group.id === collectionId ? {
+				...group,
+				notes: group.notes.filter(note => note.id === id)
+			} : group)
 		}));
 	},
 	addGroup: async (uid, id, name, owner) => {
@@ -153,14 +172,18 @@ let notesStore = (set, get) => ({
 		set(state => ({
 			groups: [...state.groups, group]
 		}));
-		return group
+		return group;
 	},
-	removeGroup: async (uid, id, name, owner) => {
-		let group = { ...groupSchema, id, name, owner };
+	removeGroup: async (uid, id) => {
+		let result = await deleteGroup(uid, id)
+		console.log(result)
 		set(state => ({
-			groups: [...state.groups, group]
+			groups: state.groups.filter(group => group.id !== id),
+			notebooks: state.notebooks.map((notebook, index) => index === 0 ? {
+				...notebook,
+				notes: notebook.notes.filter(item => item.groupId !== id)
+			} : notebook)
 		}));
-		return group
 	},
 	addGroupNote: async (uid, groupId, noteId, title, author) => {
 		let result = await createGroupNote(uid, groupId, noteId, title, author);
@@ -181,7 +204,7 @@ let notesStore = (set, get) => ({
 	},
 	clearAll: () => set(state => ({
 		notebooks: [],
-		groups: [],
+		groups: []
 	}))
 });
 

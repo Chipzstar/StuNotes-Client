@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ReactComponent as Trash } from '../assets/svg/trash.svg';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
@@ -10,14 +10,19 @@ import { useNotesStore } from '../store';
 import { useHistory, useParams } from 'react-router-dom';
 import { Scrollbars } from 'react-custom-scrollbars';
 import { useMeasure } from 'react-use';
+import { TYPES } from '../constants';
 
 const NoteList = ({ uid, filteredData, onSelect }) => {
-	let { notebook: NOTEBOOK, id: ID, group: GROUP } = useParams();
-	const [showToast, setShow] = useState(false);
-	const { notebooks, removeNotebookNote } = useNotesStore(useCallback(state => state, [ID, NOTEBOOK]));
+	//hooks
 	const history = useHistory()
 	const [divRef1, { height:outerDivHeight }] = useMeasure();
 	const [divRef2 ] = useMeasure();
+	let { notebook: NOTEBOOK, id: ID, group: GROUP } = useParams();
+	const { removeNote } = useNotesStore(useCallback(state => state, [ID, NOTEBOOK]));
+	//state
+	const [showToast, setShow] = useState(false);
+	//memos
+	const type = useMemo(() => NOTEBOOK ? TYPES.PERSONAL : GROUP ? TYPES.SHARED : null, [GROUP, NOTEBOOK]);
 
 	/*useEffect(() => {
 		console.log("inner", innerDivHeight)
@@ -28,7 +33,7 @@ const NoteList = ({ uid, filteredData, onSelect }) => {
 	}, [outerDivHeight]);*/
 
 	useEffect(() => {
-		console.log("NOTE_ID", ID)
+		console.log("type:", type)
 	}, [ID]);
 
 	const activeDoc = classNames({
@@ -66,7 +71,7 @@ const NoteList = ({ uid, filteredData, onSelect }) => {
 							type='button'
 							className='btn bg-primary text-black fw-bold'
 							data-bs-dismiss='modal'
-							onClick={() => removeNotebookNote(uid, ID).then(() => {
+							onClick={() => removeNote(uid, type, ID).then(() => {
 								setShow(true)
 								history.goBack()
 							})}
