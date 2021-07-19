@@ -3,14 +3,12 @@ import Notebook from '../containers/Notebook';
 import { useNotesStore } from '../store';
 import SideBar from '../components/SideBar';
 import { useMeasure } from 'react-use';
-import { useAuth } from '../contexts/AuthContext';
 import { Modal } from 'bootstrap';
 import { useParams } from 'react-router-dom';
-import CreateModal from '../components/CreateModal';
+import CreateNotebook from '../modals/CreateNotebook';
 import useNewNotebook from '../hooks/useNewNotebook';
 
 const Dashboard = props => {
-	const user = useAuth();
 	let { notebook: NOTEBOOK, group: GROUP, id: ID } = useParams();
 	const { notebooks, groups } = useNotesStore();
 	const [ref, { width: WIDTH }] = useMeasure();
@@ -18,24 +16,27 @@ const Dashboard = props => {
 	const { name, handleChange, handleSubmit } = useNewNotebook();
 	const notebookRef = useRef();
 
-	const { id: currentId, notes: currentNotes } = useMemo(() => {
-		console.table({
-			ID,
-			NOTEBOOK,
-			GROUP,
-			notebooks,
-			groups
-		})
+	const currentId = useMemo(() => {
 		if (NOTEBOOK) {
-			let { id, notes } = notebooks.find(notebook => notebook.name === NOTEBOOK)
-			return { id, notes }
+			return notebooks.find(notebook => notebook.name === NOTEBOOK).id
 		} else if (GROUP) {
 			let group = groups.find(group => group.name === GROUP)
-			return group ? { id: group.id, notes: group.notes } : { id: notebooks[0].id, notes: notebooks[0].notes }
+			return group ? group.id : notebooks[0].id
 		} else {
-			return { id: notebooks[0].id, notes: notebooks[0].notes}
+			return notebooks[0].id
 		}
 	}, [ID, NOTEBOOK, GROUP, notebooks, groups]);
+
+	const currentNotes = useMemo(() => {
+		if (NOTEBOOK) {
+			return notebooks.find(notebook => notebook.name === NOTEBOOK).notes
+		} else if (GROUP) {
+			let group = groups.find(group => group.name === GROUP)
+			return group ? group.notes : notebooks[0].notes
+		} else {
+			return notebooks[0].notes
+		}
+	}, [ID, NOTEBOOK, GROUP]);
 
 	useEffect(() => {
 		setShowModal(new Modal(notebookRef.current));
@@ -43,7 +44,7 @@ const Dashboard = props => {
 
 	return (
 		<div className='container-fluid fixed-container' ref={ref}>
-			<CreateModal
+			<CreateNotebook
 				ref={notebookRef}
 				type='notebook'
 				name={name}

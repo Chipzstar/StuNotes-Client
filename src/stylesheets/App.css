@@ -105,10 +105,6 @@
     font-size: 20px;
 }
 
-.icon-btn:hover {
-    cursor: pointer;
-}
-
 .borderless:focus {
     outline: none
 }
@@ -185,5 +181,38 @@
 .menu-item:hover {
     color: #2980b9;
 }
+
+.send {
+    border-radius: 50px;
+    width: 100px;
+}
+
+/*.track-horizontal {
+    position: absolute;
+    height: 6px;
+    right: 2px;
+    bottom: 2px;
+    left: 2px;
+    border-radius: 3px;
+}
+.track-horizontal .thumb-horizontal {
+    position: relative;
+    display: block;
+    height: 100%;
+    cursor: pointer;
+    border-radius: inherit;
+    background-color: rgba(125, 149, 255, 0.993);
+}
+
+.view {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    right: 0px;
+    bottom: 0px;
+    overflow: scroll;
+    margin-right: -15px;
+    margin-bottom: -17px !important;
+}*/
 
 

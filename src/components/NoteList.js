@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { ReactComponent as Trash } from '../assets/svg/trash.svg';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
@@ -12,29 +12,21 @@ import { Scrollbars } from 'react-custom-scrollbars';
 import { useMeasure } from 'react-use';
 import { TYPES } from '../constants';
 
-const NoteList = ({ uid, filteredData, onSelect }) => {
+const NoteList = ({ uid, collectionId, filteredData, onSelect }) => {
 	//hooks
-	const history = useHistory()
-	const [divRef1, { height:outerDivHeight }] = useMeasure();
-	const [divRef2 ] = useMeasure();
+	const history = useHistory();
+	const [divRef1, { height: outerDivHeight }] = useMeasure();
+	const [divRef2] = useMeasure();
 	let { notebook: NOTEBOOK, id: ID, group: GROUP } = useParams();
-	const { removeNote } = useNotesStore(useCallback(state => state, [ID, NOTEBOOK]));
+	const { removeNotebookNote, removeGroupNote } = useNotesStore();
 	//state
 	const [showToast, setShow] = useState(false);
 	//memos
 	const type = useMemo(() => NOTEBOOK ? TYPES.PERSONAL : GROUP ? TYPES.SHARED : null, [GROUP, NOTEBOOK]);
 
-	/*useEffect(() => {
-		console.log("inner", innerDivHeight)
-	}, [innerDivHeight]);
-
 	useEffect(() => {
-		console.log("outer", outerDivHeight)
-	}, [outerDivHeight]);*/
-
-	useEffect(() => {
-		console.log("type:", type)
-	}, [ID]);
+		console.log("Type:", type)
+	}, [type])
 
 	const activeDoc = classNames({
 		'list-group-item': true,
@@ -71,10 +63,13 @@ const NoteList = ({ uid, filteredData, onSelect }) => {
 							type='button'
 							className='btn bg-primary text-black fw-bold'
 							data-bs-dismiss='modal'
-							onClick={() => removeNote(uid, type, ID).then(() => {
-								setShow(true)
-								history.goBack()
-							})}
+							onClick={async () => {
+								type === TYPES.PERSONAL ?
+									await removeNotebookNote(uid, type, collectionId, ID) :
+									await removeGroupNote(uid, type, collectionId, ID);
+								setShow(true);
+								history.goBack();
+							}}
 						>
 							Yes
 						</button>
@@ -96,12 +91,11 @@ const NoteList = ({ uid, filteredData, onSelect }) => {
 	);
 
 	return (
-		<div ref={divRef1} className="w-100">
-			<Scrollbars autoHeight autoHeightMin={outerDivHeight} autoHide >
+		<div ref={divRef1} className='w-100'>
+			<Scrollbars autoHeight autoHeightMin={outerDivHeight} autoHide>
 				<div className='list-group' ref={divRef2}>
 					{alertMessage}
 					{filteredData.map(({ id, title, description, author, createdAt, tags }, index) => {
-						//console.log("Doc", index, "=>", id)
 						return id === ID ?
 							(
 								<a key={index} className={activeDoc}>
@@ -138,6 +132,7 @@ const NoteList = ({ uid, filteredData, onSelect }) => {
 };
 
 NoteList.propTypes = {
+	collectionId: PropTypes.string.isRequired,
 	onSelect: PropTypes.func.isRequired,
 	filteredData: PropTypes.array.isRequired
 };

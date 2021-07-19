@@ -1,15 +1,22 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useParams } from 'react-router-dom';
+import { Offcanvas } from 'react-bootstrap';
+import { TYPES } from '../constants';
+//images
 import document from '../assets/svg/document.svg';
+import team from '../assets/svg/team.svg';
 import priceTag from '../assets/svg/price-tag.svg';
 import share from '../assets/svg/share.svg';
 import upload from '../assets/svg/cloud-upload.svg';
+import newMember from '../assets/svg/new-member.svg';
+//components
 import QuillEditor from './QuillEditor';
-import { useNotesStore } from '../store';
-import { TYPES } from '../constants';
 import Tag from './Tag';
 import MembersContainer from './MembersContainer';
+import { Modal } from 'bootstrap';
+import { useNotesStore } from '../store';
+import NewMemberForm from '../modals/NewMemberForm';
 
 const NoteContainer = ({
 	                       notebookId,
@@ -26,8 +33,15 @@ const NoteContainer = ({
 	                       newNote
                        }) => {
 	const { notebook: NOTEBOOK, group: GROUP } = useParams();
-	const { groups, notebooks } = useNotesStore(useCallback(state => state, [noteId]));
+	const { groups, notebooks, addMember } = useNotesStore(useCallback(state => state, [noteId]));
 	const [tag, setTag] = useState('');
+	const [show, setShow] = useState(false);
+	const [memberModal, setMemberModal] = useState(false);
+	const memberRef = useRef(null);
+
+	useEffect(() => {
+		setMemberModal(new Modal(memberRef.current));
+	}, []);
 
 	const handleTag = useCallback(
 		(e) => {
@@ -37,35 +51,40 @@ const NoteContainer = ({
 
 	const type = useMemo(() => NOTEBOOK ? TYPES.PERSONAL : GROUP ? TYPES.SHARED : null, [NOTEBOOK, GROUP]);
 
-	/*const notebookId = useMemo(() => {
-		if (NOTEBOOK) {
-			return notebooks.find(item => item.name === NOTEBOOK).id;
-		} else if (GROUP) {
-			return groups.find(item => item.name === GROUP).id;
-		} else {
-			return notebooks[0].id;
-		}
-	}, [NOTEBOOK, GROUP]);*/
-
 	//TODO - debug editor slow response when typing
 	const hasNotes = useMemo(() => {
 		if (NOTEBOOK) {
 			return notebooks.find(item => item.name === NOTEBOOK).notes.length;
 		} else if (GROUP) {
-			let group = groups.find(item => item.name === GROUP)
+			let group = groups.find(item => item.name === GROUP);
 			return group && group.notes.length;
 		} else return false;
 	}, [NOTEBOOK, GROUP, notebooks, groups]);
 
 	return (
 		<div className='container-fluid flex-column text-center pb-3'>
+			<NewMemberForm onSubmit={({ email }) => {
+				addMember(GROUP, email)
+					.then((msg) => {
+						memberModal.hide();
+						alert(msg);
+					})
+					.catch(err => alert(err));
+			}} ref={memberRef} />
 			<div className='d-flex flex-row align-items-center justify-content-between px-2 pb-3'>
 				<div className='d-flex align-items-center'>
-					<div className='d-flex flex-row align-items-center pe-5'>
-						<img src={document} width={25} height={25} alt='' />
-						<span className='lead font-weight-bold ps-3'>{notebookName}</span>
-					</div>
 					<div className='d-flex flex-row align-items-center'>
+						{NOTEBOOK ? <img src={document} width={25} height={25} alt='' /> :
+							<img src={team} width={30} height={30} alt='' />}
+						<span className='lead text-capitalize font-weight-bold ps-3'>{notebookName}</span>
+					</div>
+					{GROUP && <div role='button' className='btn btn-sm btn-success text-lowercase mx-3' onClick={() => setShow(true)}>
+						View Members
+					</div>}
+					{GROUP && <div role='button' onClick={() => memberModal.show()} className='me-2'>
+						<img src={newMember} width={30} height={30} alt='new member' />
+					</div>}
+					<div className='d-flex flex-row align-items-center ps-5'>
 						<img src={priceTag} width={25} height={25} alt='' />
 						<form onSubmit={(event) => {
 							onNewTag(event);
@@ -89,9 +108,13 @@ const NoteContainer = ({
 					</ul>
 				</div>
 				<div>
-					<div>
-						<img src={share} width={25} height={25} alt='' className='me-3 icon-btn' />
-						<img src={upload} width={25} height={25} alt='' className='icon-btn' />
+					<div className='d-flex flex-row'>
+						<div role='button' className='me-3'>
+							<img src={share} width={25} height={25} alt='share' />
+						</div>
+						<div role='button'>
+							<img src={upload} width={25} height={25} alt='upload' />
+						</div>
 					</div>
 				</div>
 			</div>
@@ -104,7 +127,7 @@ const NoteContainer = ({
 								name='title'
 								type='text'
 								value={title}
-								onChange={onTitleChange}
+								onChange={(e) => onTitleChange(e, type)}
 								placeholder='Untitled'
 								className='h1 fw-bold border-0 borderless'
 							/>
@@ -125,11 +148,6 @@ const NoteContainer = ({
 							onChange={onDescriptionChange}
 						/>
 					</div>
-					{GROUP && (
-						<div className="my-5">
-							<MembersContainer />
-						</div>
-					)}
 				</div>
 			) : (
 				<div className='d-flex min-vh-100 flex-column justify-content-center align-items-center mx-auto py-3'>
@@ -144,6 +162,18 @@ const NoteContainer = ({
 					</div>
 				</div>
 			)}
+			<Offcanvas show={show} onHide={() => setShow(false)} placement='bottom' scroll>
+				<Offcanvas.Header closeButton>
+					<Offcanvas.Title>
+						Members
+					</Offcanvas.Title>
+					<Offcanvas.Body>
+						<div>
+							<MembersContainer />
+						</div>
+					</Offcanvas.Body>
+				</Offcanvas.Header>
+			</Offcanvas>
 		</div>
 	);
 };

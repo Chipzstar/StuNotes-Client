@@ -1,6 +1,8 @@
 import firebase from 'firebase/app';
 import 'firebase/auth';
 import 'firebase/firestore';
+import 'firebase/functions';
+
 import { TYPES } from './constants';
 
 const app = firebase.initializeApp({
@@ -14,10 +16,12 @@ const app = firebase.initializeApp({
 });
 
 export const auth = app.auth();
+export const db = app.firestore();
+export const func = app.functions('europe-west2');
 
 export const registerNewUser = async (userDetails) => {
 	return new Promise(async (resolve, reject) => {
-		const { firstName, emailAddress, password, ...others } = userDetails;
+		const { firstName, emailAddress, password } = userDetails;
 		try {
 			await firebase.auth().createUserWithEmailAndPassword(emailAddress, password);
 			await firebase.auth().currentUser.updateProfile({
@@ -105,13 +109,13 @@ export const updateNote = async (uid, docId, data) => {
 	});
 };
 
-export const deleteNote = async (uid, type, notebookId, noteId) => {
+export const deleteNote = async (uid, type, collectionId, noteId) => {
 	return new Promise(async (resolve, reject) => {
 		try {
-			console.table({uid, type, notebookId, noteId})
+			console.table({uid, type, collectionId, noteId})
 			const noteRef = db.doc(`root/${uid}/notes/${noteId}`);
-			if (uid !== notebookId) {
-				let path = type === TYPES.SHARED ? `root/${uid}/groups/${notebookId}` : `root/${uid}/notebooks/${notebookId}`
+			if (uid !== collectionId) {
+				let path = type === TYPES.SHARED ? `root/${uid}/groups/${collectionId}` : `root/${uid}/notebooks/${collectionId}`
 				const Ref = db.doc(path);
 				await Ref.update({
 					notes: firebase.firestore.FieldValue.arrayRemove(noteRef)
@@ -177,7 +181,7 @@ export const fetchNotebooks = async (uid) => {
 			const Ref = db.collection(`root/${uid}/notebooks`);
 			const snapshot = await Ref.get();
 			let notebooks = snapshot.docs.map(doc => {
-				let { name, createdAt, owner, notes } = doc.data();
+				let { name, createdAt, owner } = doc.data();
 				createdAt = createdAt.toDate();
 				return { id: doc.id, name, owner, createdAt, notes: [] };
 			});
@@ -236,7 +240,7 @@ export const deleteNotebook = async (uid, docId) => {
 	});
 };
 
-export const createGroup = async (uid, docId, name, owner) => {
+export const createGroup = async ({ uid, owner, email }, docId, name) => {
 	return new Promise(async (resolve, reject) => {
 		try {
 			const Ref = db.doc(`root/${uid}/groups/${docId}`);
@@ -245,7 +249,11 @@ export const createGroup = async (uid, docId, name, owner) => {
 				owner,
 				createdAt: new Date(),
 				notes: [],
-				members: []
+				members: [{
+					id: uid,
+					name: owner,
+					email
+				}]
 			});
 			resolve();
 		} catch (e) {
@@ -315,6 +323,6 @@ export const fetchGroups = async (uid) => {
 	});
 }
 
-export const db = app.firestore();
+export const sendInvite = func.httpsCallable('sendInvite')
 
 export default app;

@@ -12,7 +12,7 @@ import { AiOutlineSortAscending } from 'react-icons/ai';
 import NoteList from '../components/NoteList';
 import { useMeasure } from 'react-use';
 import { Modal } from 'bootstrap';
-import CalendarPicker from '../components/CalendarPicker';
+import CalendarPicker from '../modals/CalendarPicker';
 import useCalendar from '../hooks/useCalendar';
 import moment from 'moment';
 import { useGroupsStore } from '../store';

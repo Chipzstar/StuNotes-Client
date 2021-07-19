@@ -6,10 +6,8 @@ import { useParams } from 'react-router-dom';
 
 const useNewGroup = () => {
 	const user = useAuth();
-	const {group, GROUP, id: ID} = useParams()
 	const { groups, addGroup } = useNotesStore();
-	const [id, setId] = useState(null);
-	const [name, setName] = useState(GROUP ? GROUP : "");
+	const [name, setName] = useState("");
 
 	async function createNewGroup(name) {
 		try {
@@ -19,9 +17,8 @@ const useNewGroup = () => {
 				}
 			}
 			let id = nanoid(16);
-			let group = await addGroup(user.uid, id, name, user.displayName);
+			let group = await addGroup(user, id, name);
 			console.log("NEW GROUP:", group)
-			setId(id);
 		} catch (err) {
 			console.error(err);
 		}
@@ -38,7 +35,7 @@ const useNewGroup = () => {
 		return name
 	}
 
-	return { id, name, handleChange, handleSubmit }
+	return { name, handleChange, handleSubmit }
 };
 
 export default useNewGroup;

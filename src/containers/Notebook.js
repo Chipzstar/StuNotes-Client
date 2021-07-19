@@ -8,10 +8,11 @@ import debounce from 'lodash.debounce';
 import NoteList from '../components/NoteList';
 import NoteContainer from '../components/NoteContainer';
 import NotebookNav from '../components/NotebookNav';
-import CalendarPicker from '../components/CalendarPicker';
-import CreateModal from '../components/CreateModal';
+import CalendarPicker from '../modals/CalendarPicker';
+import CreateNotebook from '../modals/CreateNotebook';
 import { VscCalendar } from 'react-icons/vsc';
 import { RiBookletLine } from 'react-icons/ri';
+import { GrGroup } from 'react-icons/gr';
 import { AiOutlineSortAscending } from 'react-icons/ai';
 import { Modal } from 'bootstrap';
 import { TYPES } from '../constants';
@@ -29,7 +30,7 @@ const Notebook = ({ notebookId, notebookName, notes }) => {
 	//hooks
 	const user = useAuth();
 	const history = useHistory();
-	const { notebook: NOTEBOOK, group: GROUP, id: ID } = useParams();
+	const { notebook: NOTEBOOK, id: ID } = useParams();
 	const { updateNotebookNote, updateGroupNote, addTag, removeTag, addNotebookNote, addGroupNote } = useNotesStore();
 	const [calendarRef, date, handleDateChange] = useCalendar(filterNotesByDate);
 	const {
@@ -131,6 +132,7 @@ const Notebook = ({ notebookId, notebookName, notes }) => {
 		setStatus('Saving...');
 		const { value } = e.target;
 		setTitle(value);
+		setFilteredNotes(() => notes.map(note => note.id === noteId ? {...note, title: value } : note))
 		type === TYPES.PERSONAL ? updateNotebookNote(noteId, { title: value }) : updateGroupNote(notebookId, noteId, {title: value })
 		debouncedChangeHandler(noteId, { title: value });
 	};
@@ -144,7 +146,7 @@ const Notebook = ({ notebookId, notebookName, notes }) => {
 		e.preventDefault();
 		let { value } = e.target.elements[0];
 		setTags(prevState => {
-			addTag(user.uid, notebookName, noteId, value);
+			addTag(user.uid, notebookId, noteId, value);
 			return [...prevState, value];
 		});
 	};
@@ -165,13 +167,13 @@ const Notebook = ({ notebookId, notebookName, notes }) => {
 	return (
 		<div id='page-content-wrapper' className='row flex-nowrap'>
 			<CalendarPicker date={date} onChangeHandler={handleDateChange} modalRef={calendarRef} />
-			<CreateModal type={TYPES.PERSONAL} ref={notebookRef} name={newNotebookName} onChange={handleChangeNotebook} onSubmit={(e) => {
+			<CreateNotebook type={TYPES.PERSONAL} ref={notebookRef} name={newNotebookName} onChange={handleChangeNotebook} onSubmit={(e) => {
 				handleSubmitNotebook(e).then(name => {
 					notebookModal.hide();
 					history.push(`/notebooks/${name}`);
 				}).catch((err) => console.error(err));
 			}} />
-			<CreateModal type={TYPES.SHARED} ref={groupRef} name={newGroupName} onChange={handleChangeGroup} onSubmit={(e) => {
+			<CreateNotebook type={TYPES.SHARED} ref={groupRef} name={newGroupName} onChange={handleChangeGroup} onSubmit={(e) => {
 				handleSubmitGroup(e).then(name => {
 					groupModal.hide();
 					history.push(`/groups/${name}`);
@@ -187,9 +189,10 @@ const Notebook = ({ notebookId, notebookName, notes }) => {
 					/>
 					<div className='d-flex flex-row align-items-center justify-content-around px-3 py-3'>
 						<div className='d-flex flex-grow-1 align-items-center'>
-							<RiBookletLine size={25} className='me-3' />
-							<span
-								className='text-center text-capitalize lead font-weight-bold'>{notebookName} - {noteCount}</span>
+							{NOTEBOOK ? <RiBookletLine size={25} className='me-3' /> : <GrGroup size={25} className='me-3' />}
+							<span className='text-center text-capitalize lead font-weight-bold'>
+								{notebookName} - {noteCount}
+							</span>
 						</div>
 						<div className='d-flex flex-grow-0 align-items-center justify-content-center'>
 							<div role='button' onClick={() => calendarModal.show()}>
@@ -201,7 +204,12 @@ const Notebook = ({ notebookId, notebookName, notes }) => {
 						</div>
 					</div>
 					<div className='d-flex flex-grow-1'>
-						<NoteList uid={user.uid} filteredData={filteredNotes} onSelect={handleDocSelection} />
+						<NoteList
+							uid={user.uid}
+							collectionId={notebookId}
+							filteredData={filteredNotes}
+							onSelect={handleDocSelection}
+						/>
 					</div>
 				</div>
 			</div>

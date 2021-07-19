@@ -14,9 +14,9 @@ import {
 	fetchGroups,
 	fetchNotebooks,
 	fetchNotes,
+	sendInvite,
 	updateNotebook
 } from '../firebase';
-import { TYPES } from '../constants';
 
 let notesStore = (set, get) => ({
 	notebooks: [],
@@ -26,7 +26,7 @@ let notesStore = (set, get) => ({
 			...notebookSchema,
 			id: uid,
 			owner,
-			name: 'All Notes',
+			name: 'my notes',
 			createdAt: new Date(),
 			notes: []
 		}]
@@ -38,7 +38,7 @@ let notesStore = (set, get) => ({
 			...notebookSchema,
 			id: uid,
 			owner,
-			name: 'My Notes',
+			name: 'my notes',
 			createdAt,
 			notes: []
 		};
@@ -95,35 +95,39 @@ let notesStore = (set, get) => ({
 	},
 	updateGroupNote: (groupId, noteId, data) => {
 		set(state => ({
-			notebooks: state.notebooks.map((notebook, index) => index === 0 ? {
-				...notebook,
-				notes: notebook.notes.map(note => note.id === noteId ? { ...note, ...data } : note )
-			} : notebook),
-			groups: state.groups
-				.map(group => group.id === groupId ? {
-					...group,
-					notes: group.notes.map(note => note.id === noteId ? { ...note, ...data } : note)
-				} : group)
+			groups: state.groups.map(group => group.id === groupId ? {
+				...group,
+				notes: group.notes.map(note => note.id === noteId ? { ...note, ...data } : note)
+			} : group)
 		}));
 	},
-	addTag: async (uid, notebookName, id, tag) => {
+	addTag: async (uid, notebookId, id, tag) => {
 		await createTag(uid, id, tag);
 		set(state => ({
-			notebooks: state.notebooks
-				.map((notebook, index) => index === 0 || notebook.name === notebookName ?
+			notebooks: state.notebooks.map((notebook, index) =>
+				index === 0 || notebook.id === notebookId ?
 					{
 						...notebook, notes: notebook.notes.map(note => note.id === id ?
 							{
 								...note,
 								tags: [...note.tags, tag]
 							} : note)
-					} : notebook)
+					} : notebook),
+			groups: state.groups.map(group => group.id === notebookId ?
+				{
+					...group,
+					notes: group.notes.map(note => note.id === id ?
+						{
+							...note,
+							tags: [...note.tags, tag]
+						} : note)
+				} : group)
 		}));
 	},
-	removeTag: async (uid, notebookName, id, tag) => {
+	removeTag: async (uid, notebookId, id, tag) => {
 		await deleteTag(uid, id, tag);
 		set(state => ({
-			notebooks: state.notebooks.map((notebook, index) => index === 0 || notebook.name === notebookName ?
+			notebooks: state.notebooks.map((notebook, index) => index === 0 || notebook.id === notebookId ?
 				{
 					...notebook,
 					notes: notebook.notes.map(note => note.id === id ?
@@ -131,7 +135,16 @@ let notesStore = (set, get) => ({
 							...note,
 							tags: note.tags.filter(t => t !== tag)
 						} : note)
-				} : notebook)
+				} : notebook),
+			groups: state.groups.map(group => group.id === notebookId ?
+				{
+					...group,
+					notes: group.notes.map(note => note.id === id ?
+						{
+							...note,
+							tags: note.tags.filter(t => t !== tag)
+						} : note)
+				} : group)
 		}));
 	},
 	addNotebookNote: async (uid, notebookId, noteId, title, author) => {
@@ -150,33 +163,37 @@ let notesStore = (set, get) => ({
 			} : item)
 		}));
 	},
-	removeNote: async (uid, type, id) => {
-		let note = get().notebooks[0].notes.find(item => item.id === id);
-		let collectionId = type === TYPES.PERSONAL ? note.notebookId : note.groupId
-		let result = await deleteNote(uid, type, collectionId, id);
+	removeNotebookNote: async (uid, type, notebookId, id) => {
+		let result = await deleteNote(uid, type, notebookId, id);
 		console.log(result);
 		set(state => ({
-			notebooks: state.notebooks.map((notebook, index) => index === 0 || notebook.id === collectionId ? {
+			notebooks: state.notebooks.map((notebook, index) => index === 0 || notebook.id === notebookId ? {
 				...notebook,
 				notes: notebook.notes.filter(note => note.id !== id)
-			} : notebook),
-			groups: state.groups.map(group => group.id === collectionId ? {
-				...group,
-				notes: group.notes.filter(note => note.id === id)
-			} : group)
+			} : notebook)
 		}));
 	},
-	addGroup: async (uid, id, name, owner) => {
-		await createGroup(uid, id, name, owner);
-		let group = { ...groupSchema, id, name, owner };
+	addGroup: async ({ uid, displayName: owner, email }, id, name) => {
+		await createGroup({ uid, owner, email }, id, name);
+		let group = {
+			...groupSchema,
+			id,
+			name,
+			owner,
+			members: [{
+				id: uid,
+				name: owner,
+				email
+			}]
+		};
 		set(state => ({
 			groups: [...state.groups, group]
 		}));
 		return group;
 	},
 	removeGroup: async (uid, id) => {
-		let result = await deleteGroup(uid, id)
-		console.log(result)
+		let result = await deleteGroup(uid, id);
+		console.log(result);
 		set(state => ({
 			groups: state.groups.filter(group => group.id !== id),
 			notebooks: state.notebooks.map((notebook, index) => index === 0 ? {
@@ -186,6 +203,7 @@ let notesStore = (set, get) => ({
 		}));
 	},
 	addGroupNote: async (uid, groupId, noteId, title, author) => {
+		console.table({ groupId, noteId });
 		let result = await createGroupNote(uid, groupId, noteId, title, author);
 		console.log(result);
 		set(state => ({
@@ -202,7 +220,32 @@ let notesStore = (set, get) => ({
 			} : item)
 		}));
 	},
-	clearAll: () => set(state => ({
+	removeGroupNote: async (uid, type, groupId, id) => {
+		let result = await deleteNote(uid, type, groupId, id);
+		console.log(result);
+		set(state => ({
+			groups: state.groups.map(group => group.id === groupId ? {
+				...group,
+				notes: group.notes.filter(note => note.id !== id)
+			} : group)
+		}));
+	},
+	addMember: async (groupName, email) => {
+		let { id: groupId } = get().groups.find(group => group.name === groupName);
+		try {
+			let { data } = await sendInvite({ email, groupId });
+			set(state => ({
+				groups: state.groups.map(group => group.name === groupName ? {
+					...group,
+					members: [...group.members, { id: data.uid, name: data.displayName, email }]
+				} : group)
+			}));
+			return `${data.displayName} has been added to the group!`;
+		} catch (err) {
+			return new Error('There is no user with that email address');
+		}
+	},
+	clearAll: () => set(() => ({
 		notebooks: [],
 		groups: []
 	}))

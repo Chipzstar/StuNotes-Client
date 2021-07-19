@@ -32,14 +32,12 @@ let routes = (
 			<ForgotPassword />
 		</Route>
 
-		{/*ORDER MATTERS*/}
 		<PrivateRoute exact path='/notebooks/:notebook' component={Dashboard} />
 		<PrivateRoute exact path='/notebooks/:notebook/:id' component={Dashboard} />
 		<PrivateRoute exact path='/groups/:group' component={Dashboard} />
 		<PrivateRoute exact path='/groups/:group/:id' component={Dashboard} />
 		<PrivateRoute exact path='/trash/:id' component={Dashboard} />
 		<PrivateRoute exact path='/settings' component={Settings} />
-		{/*NOTEBOOK ROUTES MUST COME LAST*/}
 		<Route exact path='*' component={ErrorPage} />
 	</Switch>
 );

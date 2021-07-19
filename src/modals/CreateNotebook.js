@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { TYPES } from '../constants';
 
-const CreateModal = React.forwardRef(({ type, name, onSubmit, onChange }, ref) => {
+const CreateNotebook = React.forwardRef(({ type, name, onSubmit, onChange }, ref) => {
 	return (
 		<div className='modal fade show' ref={ref} tabIndex='-1' aria-hidden='true'>
 			<div className='modal-dialog modal-dialog-centered'>
@@ -15,7 +15,6 @@ const CreateModal = React.forwardRef(({ type, name, onSubmit, onChange }, ref) =
 						<form onSubmit={onSubmit}>
 							<input
 								type='text'
-								id='notebook-name'
 								name='notebook-name'
 								onChange={onChange}
 								value={name}
@@ -39,11 +38,11 @@ const CreateModal = React.forwardRef(({ type, name, onSubmit, onChange }, ref) =
 	);
 });
 
-CreateModal.propTypes = {
+CreateNotebook.propTypes = {
 	type: PropTypes.string.isRequired,
 	name: PropTypes.string.isRequired,
 	onSubmit: PropTypes.func.isRequired,
 	onChange: PropTypes.func.isRequired
 };
 
-export default CreateModal;
+export default CreateNotebook;
