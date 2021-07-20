@@ -2,6 +2,7 @@ import firebase from 'firebase/app';
 import 'firebase/auth';
 import 'firebase/firestore';
 import 'firebase/functions';
+import 'firebase/database';
 
 import { TYPES } from './constants';
 
@@ -16,8 +17,9 @@ const app = firebase.initializeApp({
 });
 
 export const auth = app.auth();
-export const db = app.firestore();
+export const store = app.firestore();
 export const func = app.functions('europe-west2');
+export const db = app.database("");
 
 export const registerNewUser = async (userDetails) => {
 	return new Promise(async (resolve, reject) => {
@@ -71,9 +73,9 @@ export const signOutUser = async () => {
 export const createNotebookNote = async (uid, notebookId, docId, title, author) => {
 	return new Promise(async (resolve, reject) => {
 		try {
-			const noteRef = db.doc(`root/${uid}/notes/${docId}`);
+			const noteRef = store.doc(`root/${uid}/notes/${docId}`);
 			if (uid !== notebookId) {
-				const notebookRef = db.doc(`root/${uid}/notebooks/${notebookId}`);
+				const notebookRef = store.doc(`root/${uid}/notebooks/${notebookId}`);
 				await notebookRef.update({
 					notes: firebase.firestore.FieldValue.arrayUnion(noteRef)
 				});
@@ -98,7 +100,7 @@ export const createNotebookNote = async (uid, notebookId, docId, title, author) 
 export const updateNote = async (uid, docId, data) => {
 	return new Promise(async (resolve, reject) => {
 		try {
-			const Ref = db.collection(`root/${uid}/notes`);
+			const Ref = store.collection(`root/${uid}/notes`);
 			await Ref.doc(docId).update({
 				...data
 			});
@@ -113,10 +115,10 @@ export const deleteNote = async (uid, type, collectionId, noteId) => {
 	return new Promise(async (resolve, reject) => {
 		try {
 			console.table({uid, type, collectionId, noteId})
-			const noteRef = db.doc(`root/${uid}/notes/${noteId}`);
+			const noteRef = store.doc(`root/${uid}/notes/${noteId}`);
 			if (uid !== collectionId) {
 				let path = type === TYPES.SHARED ? `root/${uid}/groups/${collectionId}` : `root/${uid}/notebooks/${collectionId}`
-				const Ref = db.doc(path);
+				const Ref = store.doc(path);
 				await Ref.update({
 					notes: firebase.firestore.FieldValue.arrayRemove(noteRef)
 				});
@@ -133,7 +135,7 @@ export const deleteNote = async (uid, type, collectionId, noteId) => {
 export const fetchNotes = async (uid) => {
 	return new Promise(async (resolve, reject) => {
 		try {
-			const Ref = db.collection(`root/${uid}/notes`);
+			const Ref = store.collection(`root/${uid}/notes`);
 			const snapshot = await Ref.get();
 			let notes = snapshot.docs.map(doc => {
 				let { title, author, createdAt, description, tags, notebookId, groupId } = doc.data();
@@ -150,7 +152,7 @@ export const fetchNotes = async (uid) => {
 export const createTag = async (uid, docId, tag) => {
 	return new Promise(async (resolve, reject) => {
 		try {
-			const Ref = db.doc(`root/${uid}/notes/${docId}`);
+			const Ref = store.doc(`root/${uid}/notes/${docId}`);
 			await Ref.update({
 				tags: firebase.firestore.FieldValue.arrayUnion(tag)
 			});
@@ -164,7 +166,7 @@ export const createTag = async (uid, docId, tag) => {
 export const deleteTag = async (uid, docId, tag) => {
 	return new Promise(async (resolve, reject) => {
 		try {
-			const Ref = db.doc(`root/${uid}/notes/${docId}`);
+			const Ref = store.doc(`root/${uid}/notes/${docId}`);
 			await Ref.update({
 				tags: firebase.firestore.FieldValue.arrayRemove(tag)
 			});
@@ -178,7 +180,7 @@ export const deleteTag = async (uid, docId, tag) => {
 export const fetchNotebooks = async (uid) => {
 	return new Promise(async (resolve, reject) => {
 		try {
-			const Ref = db.collection(`root/${uid}/notebooks`);
+			const Ref = store.collection(`root/${uid}/notebooks`);
 			const snapshot = await Ref.get();
 			let notebooks = snapshot.docs.map(doc => {
 				let { name, createdAt, owner } = doc.data();
@@ -195,7 +197,7 @@ export const fetchNotebooks = async (uid) => {
 export const createNotebook = async (uid, id, name, owner) => {
 	return new Promise(async (resolve, reject) => {
 		try {
-			const Ref = db.collection(`root/${uid}/notebooks`);
+			const Ref = store.collection(`root/${uid}/notebooks`);
 			await Ref.doc(id).set({
 				name,
 				owner,
@@ -213,7 +215,7 @@ export const createNotebook = async (uid, id, name, owner) => {
 export const updateNotebook = async (uid, docId, data) => {
 	return new Promise(async (resolve, reject) => {
 		try {
-			const Ref = db.collection(`root/${uid}/notebooks`);
+			const Ref = store.collection(`root/${uid}/notebooks`);
 			await Ref.doc(docId).update({
 				...data
 			});
@@ -227,7 +229,7 @@ export const updateNotebook = async (uid, docId, data) => {
 export const deleteNotebook = async (uid, docId) => {
 	return new Promise(async (resolve, reject) => {
 		try {
-			const notebookRef = db.doc(`root/${uid}/notebooks/${docId}`);
+			const notebookRef = store.doc(`root/${uid}/notebooks/${docId}`);
 			const { notes } = (await notebookRef.get()).data();
 			for (let ref of notes){
 				await ref.delete()
@@ -243,7 +245,7 @@ export const deleteNotebook = async (uid, docId) => {
 export const createGroup = async ({ uid, owner, email }, docId, name) => {
 	return new Promise(async (resolve, reject) => {
 		try {
-			const Ref = db.doc(`root/${uid}/groups/${docId}`);
+			const Ref = store.doc(`root/${uid}/groups/${docId}`);
 			await Ref.set({
 				name,
 				owner,
@@ -266,7 +268,7 @@ export const createGroup = async ({ uid, owner, email }, docId, name) => {
 export const deleteGroup = async (uid, docId) => {
 	return new Promise(async (resolve, reject) => {
 		try {
-			const groupRef = db.doc(`root/${uid}/groups/${docId}`);
+			const groupRef = store.doc(`root/${uid}/groups/${docId}`);
 			const { notes } = (await groupRef.get()).data();
 			for (let ref of notes){
 				await ref.delete()
@@ -282,9 +284,9 @@ export const deleteGroup = async (uid, docId) => {
 export const createGroupNote = async (uid, groupId, docId, title, author) => {
 	return new Promise(async (resolve, reject) => {
 		try {
-			const noteRef = db.doc(`root/${uid}/notes/${docId}`);
+			const noteRef = store.doc(`root/${uid}/notes/${docId}`);
 			if (uid !== groupId) {
-				const groupRef = db.doc(`root/${uid}/groups/${groupId}`);
+				const groupRef = store.doc(`root/${uid}/groups/${groupId}`);
 				await groupRef.update({
 					notes: firebase.firestore.FieldValue.arrayUnion(noteRef)
 				});
@@ -309,7 +311,7 @@ export const createGroupNote = async (uid, groupId, docId, title, author) => {
 export const fetchGroups = async (uid) => {
 	return new Promise(async (resolve, reject) => {
 		try {
-			const Ref = db.collection(`root/${uid}/groups`);
+			const Ref = store.collection(`root/${uid}/groups`);
 			const snapshot = await Ref.get();
 			let groups = snapshot.docs.map(doc => {
 				let { name, createdAt, owner, members } = doc.data();
@@ -324,5 +326,7 @@ export const fetchGroups = async (uid) => {
 }
 
 export const sendInvite = func.httpsCallable('sendInvite')
+
+export const updateMemberNotes = func.httpsCallable('updateMemberNotes')
 
 export default app;

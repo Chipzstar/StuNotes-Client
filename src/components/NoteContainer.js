@@ -26,6 +26,7 @@ const NoteContainer = ({
 	                       noteId,
 	                       title,
 	                       tags,
+	                       members,
 	                       onTitleChange,
 	                       onDescriptionChange,
 	                       onNewTag,
@@ -169,7 +170,7 @@ const NoteContainer = ({
 					</Offcanvas.Title>
 					<Offcanvas.Body>
 						<div>
-							<MembersContainer />
+							<MembersContainer members={members}/>
 						</div>
 					</Offcanvas.Body>
 				</Offcanvas.Header>
@@ -185,6 +186,7 @@ NoteContainer.propTypes = {
 	title: PropTypes.string.isRequired,
 	author: PropTypes.string.isRequired,
 	tags: PropTypes.array.isRequired,
+	members: PropTypes.array.isRequired,
 	onTitleChange: PropTypes.func.isRequired,
 	onDescriptionChange: PropTypes.func.isRequired,
 	onNewTag: PropTypes.func.isRequired,

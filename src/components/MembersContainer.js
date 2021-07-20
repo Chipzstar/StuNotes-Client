@@ -1,16 +1,13 @@
-import React, { useEffect, useMemo } from 'react';
-import { useNotesStore } from '../store';
+import React, { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { COLOURS } from '../constants';
 import { useMeasure } from 'react-use';
+import PropTypes from 'prop-types';
 import HorizontalScrollbar from './HorizontalScrollbar';
 
-const MembersContainer = props => {
-	const { groups } = useNotesStore();
-	const { group: GROUP, id: ID } = useParams();
+const MembersContainer = ({ members }) => {
+	const { id: ID } = useParams();
 	const [ref, { width: outerDivWidth }] = useMeasure();
-
-	const members = useMemo(() => GROUP ? groups.find(group => group.name === GROUP).members : [], [groups, GROUP]);
 
 	useEffect(() => {
 		console.log('Members:', members);
@@ -42,6 +39,8 @@ const MembersContainer = props => {
 	);
 };
 
-MembersContainer.propTypes = {};
+MembersContainer.propTypes = {
+	members: PropTypes.array.isRequired
+};
 
 export default MembersContainer;

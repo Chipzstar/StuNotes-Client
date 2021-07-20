@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { useParams, useHistory } from 'react-router-dom';
+import { useHistory, useParams } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
 import moment from 'moment';
 import debounce from 'lodash.debounce';
@@ -18,7 +18,7 @@ import { Modal } from 'bootstrap';
 import { TYPES } from '../constants';
 //hooks
 import { useNotesStore } from '../store';
-import { updateNote } from '../firebase';
+import { updateMemberNotes, updateNote } from '../firebase';
 import useCalendar from '../hooks/useCalendar';
 import useNewNotebook from '../hooks/useNewNotebook';
 import useNewGroup from '../hooks/useNewGroup';
@@ -30,8 +30,16 @@ const Notebook = ({ notebookId, notebookName, notes }) => {
 	//hooks
 	const user = useAuth();
 	const history = useHistory();
-	const { notebook: NOTEBOOK, id: ID } = useParams();
-	const { updateNotebookNote, updateGroupNote, addTag, removeTag, addNotebookNote, addGroupNote } = useNotesStore();
+	const { notebook: NOTEBOOK, id: ID, group: GROUP } = useParams();
+	const {
+		groups,
+		updateNotebookNote,
+		updateGroupNote,
+		addTag,
+		removeTag,
+		addNotebookNote,
+		addGroupNote
+	} = useNotesStore();
 	const [calendarRef, date, handleDateChange] = useCalendar(filterNotesByDate);
 	const {
 		name: newNotebookName,
@@ -43,8 +51,9 @@ const Notebook = ({ notebookId, notebookName, notes }) => {
 		handleChange: handleChangeGroup,
 		handleSubmit: handleSubmitGroup
 	} = useNewGroup();
-	//memo
+	//memos
 	const noteId = useMemo(() => ID ? ID : notes.length ? notes[0].id : user.uid, [ID, notes]);
+	const members = useMemo(() => GROUP ? groups.find(group => group.name === GROUP).members : [], [groups, GROUP]);
 	//state
 	const [noteCount, setNoteCount] = useState(notes.length);
 	const [filteredNotes, setFilteredNotes] = useState(notes);
@@ -61,7 +70,7 @@ const Notebook = ({ notebookId, notebookName, notes }) => {
 	const groupRef = useRef();
 
 	const debouncedChangeHandler = useMemo(() => debounce((id, data) =>
-		update(id, data).then(() => setStatus('All changes saved')), 2000), []);
+		update(id, data).then(() => setStatus('All changes saved')), 3000), []);
 
 	const debouncedSearch = useMemo(() => debounce(val =>
 			setFilteredNotes(prevState => {
@@ -92,7 +101,7 @@ const Notebook = ({ notebookId, notebookName, notes }) => {
 			let id = uuidv4();
 			setTitle('Untitled');
 			if (NOTEBOOK) {
-				await addNotebookNote(user.uid, notebookId, id, 'Untitled', author)
+				await addNotebookNote(user.uid, notebookId, id, 'Untitled', author);
 				history.push(`/notebooks/${notebookName}/${id}`);
 			} else {
 				await addGroupNote(user.uid, notebookId, id, 'Untitled', author);
@@ -125,15 +134,15 @@ const Notebook = ({ notebookId, notebookName, notes }) => {
 		setTags(tags);
 		NOTEBOOK ?
 			history.push(`/notebooks/${notebookName}/${id}`) :
-			history.push(`/groups/${notebookName}/${id}`)
+			history.push(`/groups/${notebookName}/${id}`);
 	};
 
 	const handleTitle = (e, type) => {
 		setStatus('Saving...');
 		const { value } = e.target;
 		setTitle(value);
-		setFilteredNotes(() => notes.map(note => note.id === noteId ? {...note, title: value } : note))
-		type === TYPES.PERSONAL ? updateNotebookNote(noteId, { title: value }) : updateGroupNote(notebookId, noteId, {title: value })
+		setFilteredNotes(() => notes.map(note => note.id === noteId ? { ...note, title: value } : note));
+		type === TYPES.PERSONAL ? updateNotebookNote(noteId, { title: value }) : updateGroupNote(notebookId, noteId, { title: value });
 		debouncedChangeHandler(noteId, { title: value });
 	};
 
@@ -162,23 +171,28 @@ const Notebook = ({ notebookId, notebookName, notes }) => {
 		console.table({ ...data });
 		let result = await updateNote(user.uid, id, data);
 		console.log(result);
+		members.length && updateMemberNotes({members, noteId, data} )
+			.then(res => console.log(res))
+			.catch(err => console.error(err));
 	}
 
 	return (
 		<div id='page-content-wrapper' className='row flex-nowrap'>
 			<CalendarPicker date={date} onChangeHandler={handleDateChange} modalRef={calendarRef} />
-			<CreateNotebook type={TYPES.PERSONAL} ref={notebookRef} name={newNotebookName} onChange={handleChangeNotebook} onSubmit={(e) => {
+			<CreateNotebook type={TYPES.PERSONAL} ref={notebookRef} name={newNotebookName}
+			                onChange={handleChangeNotebook} onSubmit={(e) => {
 				handleSubmitNotebook(e).then(name => {
 					notebookModal.hide();
 					history.push(`/notebooks/${name}`);
 				}).catch((err) => console.error(err));
 			}} />
-			<CreateNotebook type={TYPES.SHARED} ref={groupRef} name={newGroupName} onChange={handleChangeGroup} onSubmit={(e) => {
-				handleSubmitGroup(e).then(name => {
-					groupModal.hide();
-					history.push(`/groups/${name}`);
-				}).catch((err) => console.error(err));
-			}} />
+			<CreateNotebook type={TYPES.SHARED} ref={groupRef} name={newGroupName} onChange={handleChangeGroup}
+			                onSubmit={(e) => {
+				                handleSubmitGroup(e).then(name => {
+					                groupModal.hide();
+					                history.push(`/groups/${name}`);
+				                }).catch((err) => console.error(err));
+			                }} />
 			<div className='col-sm-4 col-md-3 col-xl-3 bg-light'>
 				<div className='d-flex flex-column pt-2 ps-2 text-dark min-vh-100'>
 					<NotebookNav
@@ -189,7 +203,8 @@ const Notebook = ({ notebookId, notebookName, notes }) => {
 					/>
 					<div className='d-flex flex-row align-items-center justify-content-around px-3 py-3'>
 						<div className='d-flex flex-grow-1 align-items-center'>
-							{NOTEBOOK ? <RiBookletLine size={25} className='me-3' /> : <GrGroup size={25} className='me-3' />}
+							{NOTEBOOK ? <RiBookletLine size={25} className='me-3' /> :
+								<GrGroup size={25} className='me-3' />}
 							<span className='text-center text-capitalize lead font-weight-bold'>
 								{notebookName} - {noteCount}
 							</span>
@@ -225,6 +240,7 @@ const Notebook = ({ notebookId, notebookName, notes }) => {
 					author={author}
 					title={title}
 					tags={tags}
+					members={members}
 					onTitleChange={handleTitle}
 					onDescriptionChange={handleDescription}
 					onNewTag={handleNewTag}
