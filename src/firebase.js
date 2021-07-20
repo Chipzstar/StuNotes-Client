@@ -2,7 +2,6 @@ import firebase from 'firebase/app';
 import 'firebase/auth';
 import 'firebase/firestore';
 import 'firebase/functions';
-import 'firebase/database';
 
 import { TYPES } from './constants';
 
@@ -19,7 +18,6 @@ const app = firebase.initializeApp({
 export const auth = app.auth();
 export const store = app.firestore();
 export const func = app.functions('europe-west2');
-export const db = app.database("");
 
 export const registerNewUser = async (userDetails) => {
 	return new Promise(async (resolve, reject) => {
