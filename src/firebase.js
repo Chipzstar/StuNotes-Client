@@ -136,9 +136,10 @@ export const fetchNotes = async (uid) => {
 			const Ref = store.collection(`root/${uid}/notes`);
 			const snapshot = await Ref.get();
 			let notes = snapshot.docs.map(doc => {
-				let { title, author, createdAt, description, tags, notebookId, groupId } = doc.data();
+				let { title, author, createdAt, description, tags, notebookId, groupId, comments } = doc.data();
 				createdAt = createdAt.toDate();
-				return { id: doc.id, title, author, createdAt, description, tags, notebookId, groupId };
+				if (comments.length) comments.forEach((c, index) => comments[index] = {...c, createdAt: c.createdAt.toDate()})
+				return { id: doc.id, title, author, createdAt, description, tags, notebookId, groupId, comments };
 			});
 			resolve(notes);
 		} catch (err) {
@@ -169,6 +170,20 @@ export const deleteTag = async (uid, docId, tag) => {
 				tags: firebase.firestore.FieldValue.arrayRemove(tag)
 			});
 			resolve('Tag removed');
+		} catch (err) {
+			reject(err);
+		}
+	});
+};
+
+export const createComment = async (uid, docId, comment) => {
+	return new Promise(async (resolve, reject) => {
+		try {
+			const Ref = store.doc(`root/${uid}/notes/${docId}`);
+			await Ref.update({
+				comments: firebase.firestore.FieldValue.arrayUnion(comment)
+			});
+			resolve('New comment added');
 		} catch (err) {
 			reject(err);
 		}

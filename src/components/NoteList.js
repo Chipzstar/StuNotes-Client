@@ -95,7 +95,7 @@ const NoteList = ({ uid, collectionId, filteredData, onSelect }) => {
 			<Scrollbars autoHeight autoHeightMin={outerDivHeight} autoHide>
 				<div className='list-group' ref={divRef2}>
 					{alertMessage}
-					{filteredData.map(({ id, title, description, author, createdAt, tags }, index) => {
+					{filteredData.map(({ id, title, description, author, createdAt, tags, comments }, index) => {
 						return id === ID ?
 							(
 								<a key={index} className={activeDoc}>
@@ -113,7 +113,7 @@ const NoteList = ({ uid, collectionId, filteredData, onSelect }) => {
 								</a>
 							) : (
 								<a key={index} className={inactiveDoc} onClick={() => {
-									onSelect(id, title, author, tags);
+									onSelect(id, title, author, tags, comments);
 								}}>
 									<div className='d-flex w-100 justify-content-between'>
 										<h5 className='mb-1'>{title}</h5>

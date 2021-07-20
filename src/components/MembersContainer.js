@@ -27,8 +27,8 @@ const MembersContainer = ({ members }) => {
 						<li key={id} className='d-flex justify-content-center align-items-center list-group-item rounded-circle border border-4 border-dark me-4'
 						    style={{
 							    backgroundColor: COLOURS[index],
-							    width: 150,
-							    height: 150
+							    width: 120,
+							    height: 120
 						    }}>
 							<span className='fw-bold lead'>{name}</span>
 						</li>

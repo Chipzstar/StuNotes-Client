@@ -9,6 +9,7 @@ import { QuillBinding } from 'y-quill';
 import withStore from '../hoc/withStore';
 import { AuthContext } from '../contexts/AuthContext';
 import { TYPES } from '../constants';
+import { CgComment} from 'react-icons/cg';
 
 Quill.register('modules/cursors', QuillCursors);
 
@@ -18,7 +19,8 @@ class QuillEditor extends React.Component {
 	constructor(props) {
 		super(props);
 		this.state = {
-			isMounted: null
+			isMounted: null,
+			metaData: []
 		};
 		this.binding = null;
 		this.quill = null;
@@ -46,7 +48,7 @@ class QuillEditor extends React.Component {
 
 	shouldComponentUpdate(nextProps, nextState, nextContext) {
 		if (this.props.room !== nextProps.room) {
-			console.table({type: nextProps.type, notebookId: nextProps.notebookId, room: nextProps.room})
+			console.table({ type: nextProps.type, notebookId: nextProps.notebookId, room: nextProps.room });
 			this.resetYDoc(nextProps.type, nextProps.notebookId, nextProps.room);
 			return true;
 		}
@@ -129,6 +131,39 @@ class QuillEditor extends React.Component {
 		this.binding = new QuillBinding(this.yText, this.quill, this.wsProvider.awareness);
 	};
 
+	onNewComment = () => {
+		let { notebookId, room } = this.props;
+		this.quill.focus()
+		let range = this.quill.getSelection();
+		console.log(range)
+		let comment = prompt('Please enter Comment', '');
+		console.log(comment);
+		if (comment == null || comment === '') {
+			alert('User cancelled the prompt');
+		} else {
+			if (range) {
+				if (!range.length) {
+					alert('Please select text');
+				} else {
+					let text = this.quill.getText(range.index, range.length);
+					console.log('User has highlighted: ', text);
+					this.state.metaData.push({ range, comment });
+					this.quill.formatText(range.index, range.length, {
+						background: '#fff72b'
+					});
+					this.props.toggleComments()
+				}
+			} else {
+				alert('User cursor is not in editor');
+			}
+		}
+		this.quill.blur()
+	};
+
+	addComment() {
+		console.log('Comment Added Successfully!');
+	}
+
 	render() {
 		return (
 			<div>
@@ -181,6 +216,9 @@ class QuillEditor extends React.Component {
 					<span className='ql-formats'>
 			      <button className='ql-clean' />
 			    </span>
+					<span className='ql-formats' role="button">
+						<CgComment size={19} className="mb-1" onClick={this.props.toggleComments}/>
+					</span>
 				</div>
 				<div id='editor' className='text-editor border-0' style={{ fontSize: '100%' }} />
 			</div>
@@ -189,7 +227,10 @@ class QuillEditor extends React.Component {
 }
 
 QuillEditor.propTypes = {
-	room: PropTypes.string.isRequired
+	room: PropTypes.string.isRequired,
+	notebookId: PropTypes.string.isRequired,
+	onChange: PropTypes.func.isRequired,
+	toggleComments: PropTypes.func.isRequired
 };
 
 export default withStore(QuillEditor);

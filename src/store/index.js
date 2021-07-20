@@ -2,6 +2,7 @@ import create from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { groupNoteSchema, groupSchema, notebookNoteSchema, notebookSchema } from '../schemas';
 import {
+	createComment,
 	createGroup,
 	createGroupNote,
 	createNotebook,
@@ -120,6 +121,30 @@ let notesStore = (set, get) => ({
 						{
 							...note,
 							tags: [...note.tags, tag]
+						} : note)
+				} : group)
+		}));
+	},
+	addComment: async (uid, notebookId, id, comment) => {
+		let result = await createComment(uid, id, comment);
+		console.log(result)
+		set(state => ({
+			notebooks: state.notebooks.map((notebook, index) =>
+				index === 0 || notebook.id === notebookId ?
+					{
+						...notebook, notes: notebook.notes.map(note => note.id === id ?
+							{
+								...note,
+								comments: [...note.comments, comment]
+							} : note)
+					} : notebook),
+			groups: state.groups.map(group => group.id === notebookId ?
+				{
+					...group,
+					notes: group.notes.map(note => note.id === id ?
+						{
+							...note,
+							comments: [...note.comments, comment]
 						} : note)
 				} : group)
 		}));

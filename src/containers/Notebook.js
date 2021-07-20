@@ -38,7 +38,8 @@ const Notebook = ({ notebookId, notebookName, notes }) => {
 		addTag,
 		removeTag,
 		addNotebookNote,
-		addGroupNote
+		addGroupNote,
+		addComment
 	} = useNotesStore();
 	const [calendarRef, date, handleDateChange] = useCalendar(filterNotesByDate);
 	const {
@@ -61,6 +62,7 @@ const Notebook = ({ notebookId, notebookName, notes }) => {
 	const [title, setTitle] = useState(notes.length ? notes[0].title : 'Untitled');
 	const [author, setAuthor] = useState(user.displayName);
 	const [tags, setTags] = useState(notes.length ? notes[0].tags : []);
+	const [comments, setComments] = useState(notes.length ? notes[0].comments : []);
 	const [status, setStatus] = useState('All changes saved');
 	const [calendarModal, showCalendarModal] = useState(false);
 	const [notebookModal, showNotebookModal] = useState(false);
@@ -128,10 +130,11 @@ const Notebook = ({ notebookId, notebookName, notes }) => {
 		}
 	};
 
-	const handleDocSelection = (id, title, author, tags) => {
+	const handleDocSelection = (id, title, author, tags, comments) => {
 		setTitle(title);
 		setAuthor(author);
 		setTags(tags);
+		setComments(comments);
 		NOTEBOOK ?
 			history.push(`/notebooks/${notebookName}/${id}`) :
 			history.push(`/groups/${notebookName}/${id}`);
@@ -160,6 +163,22 @@ const Notebook = ({ notebookId, notebookName, notes }) => {
 		});
 	};
 
+	const handleNewComment = async (e) => {
+		e.preventDefault();
+		let { value } = e.target;
+		let comment = {
+			createdAt: new Date(),
+			author: user.displayName,
+			comment: value,
+			index: null,
+			length: null
+		}
+		setComments(prevState => {
+			addComment(user.uid, notebookId, noteId, comment);
+			return [...prevState, comment];
+		});
+	};
+
 	const handleRemoveTag = async (tagName) => {
 		setTags(prevState => {
 			removeTag(user.uid, notebookName, noteId, tagName);
@@ -171,7 +190,7 @@ const Notebook = ({ notebookId, notebookName, notes }) => {
 		console.table({ ...data });
 		let result = await updateNote(user.uid, id, data);
 		console.log(result);
-		members.length && updateMemberNotes({members, noteId, data} )
+		members.length && updateMemberNotes({ members, noteId, data })
 			.then(res => console.log(res))
 			.catch(err => console.error(err));
 	}
@@ -234,18 +253,19 @@ const Notebook = ({ notebookId, notebookName, notes }) => {
 				<NoteContainer
 					notebookId={notebookId}
 					notebookName={notebookName}
-					uid={user.uid}
 					noteId={noteId}
 					status={status}
 					author={author}
 					title={title}
 					tags={tags}
+					comments={comments}
 					members={members}
 					onTitleChange={handleTitle}
 					onDescriptionChange={handleDescription}
 					onNewTag={handleNewTag}
-					newNote={createNewNote}
+					onNewNote={createNewNote}
 					onRemoveTag={handleRemoveTag}
+					onNewComment={handleNewComment}
 				/>
 			</div>
 		</div>

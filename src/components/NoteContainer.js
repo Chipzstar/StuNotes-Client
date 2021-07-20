@@ -17,6 +17,7 @@ import MembersContainer from './MembersContainer';
 import { Modal } from 'bootstrap';
 import { useNotesStore } from '../store';
 import NewMemberForm from '../modals/NewMemberForm';
+import CommentsContainer from './CommentsContainer';
 
 const NoteContainer = ({
 	                       notebookId,
@@ -27,16 +28,19 @@ const NoteContainer = ({
 	                       title,
 	                       tags,
 	                       members,
+	                       comments,
 	                       onTitleChange,
 	                       onDescriptionChange,
 	                       onNewTag,
 	                       onRemoveTag,
-	                       newNote
+	                       onNewNote,
+	                       onNewComment
                        }) => {
 	const { notebook: NOTEBOOK, group: GROUP } = useParams();
-	const { groups, notebooks, addMember } = useNotesStore(useCallback(state => state, [noteId]));
+	const { groups, notebooks, addMember } = useNotesStore(useCallback(state => state, []));
 	const [tag, setTag] = useState('');
-	const [show, setShow] = useState(false);
+	const [showMembers, setShowMembers] = useState(false);
+	const [showComments, setShowComments] = useState(false);
 	const [memberModal, setMemberModal] = useState(false);
 	const memberRef = useRef(null);
 
@@ -79,7 +83,8 @@ const NoteContainer = ({
 							<img src={team} width={30} height={30} alt='' />}
 						<span className='lead text-capitalize font-weight-bold ps-3'>{notebookName}</span>
 					</div>
-					{GROUP && <div role='button' className='btn btn-sm btn-success text-lowercase mx-3' onClick={() => setShow(true)}>
+					{GROUP && <div role='button' className='btn btn-sm btn-success text-lowercase mx-3'
+					               onClick={() => setShowMembers(true)}>
 						View Members
 					</div>}
 					{GROUP && <div role='button' onClick={() => memberModal.show()} className='me-2'>
@@ -146,6 +151,7 @@ const NoteContainer = ({
 							type={type}
 							notebookId={notebookId}
 							room={noteId}
+							toggleComments={() => setShowComments(!showComments)}
 							onChange={onDescriptionChange}
 						/>
 					</div>
@@ -153,7 +159,7 @@ const NoteContainer = ({
 			) : (
 				<div className='d-flex min-vh-100 flex-column justify-content-center align-items-center mx-auto py-3'>
 					<div className='d-grid gap-2 d-md-block'>
-						<button className='btn btn-info big-btn' onClick={newNote}>
+						<button className='btn btn-info big-btn' onClick={onNewNote}>
 							Create your first note
 						</button>
 					</div>
@@ -163,17 +169,28 @@ const NoteContainer = ({
 					</div>
 				</div>
 			)}
-			<Offcanvas show={show} onHide={() => setShow(false)} placement='bottom' scroll>
+			<Offcanvas show={showMembers} onHide={() => setShowMembers(false)} placement='bottom' scroll>
 				<Offcanvas.Header closeButton>
 					<Offcanvas.Title>
 						Members
 					</Offcanvas.Title>
-					<Offcanvas.Body>
-						<div>
-							<MembersContainer members={members}/>
-						</div>
-					</Offcanvas.Body>
 				</Offcanvas.Header>
+				<Offcanvas.Body>
+					<div>
+						<MembersContainer members={members} />
+					</div>
+				</Offcanvas.Body>
+			</Offcanvas>
+			<Offcanvas show={showComments} onHide={() => setShowComments(false)} placement='end' scroll>
+				<Offcanvas.Header closeButton>
+					<Offcanvas.Title>
+						Activity
+					</Offcanvas.Title>
+				</Offcanvas.Header>
+				<hr className='border' />
+				<Offcanvas.Body className="d-flex">
+					<CommentsContainer comments={comments} submit={onNewComment}/>
+				</Offcanvas.Body>
 			</Offcanvas>
 		</div>
 	);
@@ -187,11 +204,13 @@ NoteContainer.propTypes = {
 	author: PropTypes.string.isRequired,
 	tags: PropTypes.array.isRequired,
 	members: PropTypes.array.isRequired,
+	comments: PropTypes.array.isRequired,
 	onTitleChange: PropTypes.func.isRequired,
 	onDescriptionChange: PropTypes.func.isRequired,
 	onNewTag: PropTypes.func.isRequired,
 	onRemoveTag: PropTypes.func.isRequired,
-	newNote: PropTypes.func.isRequired
+	onNewNote: PropTypes.func.isRequired,
+	onNewComment: PropTypes.func.isRequired
 };
 
 export default NoteContainer;

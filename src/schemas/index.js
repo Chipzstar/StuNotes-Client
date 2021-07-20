@@ -6,7 +6,8 @@ export const notebookNoteSchema = {
 	author: '',
 	description: '',
 	title: 'Untitled',
-	tags: []
+	tags: [],
+	comments: []
 };
 
 export const groupNoteSchema = {
@@ -17,7 +18,8 @@ export const groupNoteSchema = {
 	author: '',
 	description: '',
 	title: 'Untitled',
-	tags: []
+	tags: [],
+	comments: []
 };
 
 export const notebookSchema = {
