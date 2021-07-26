@@ -7,6 +7,7 @@ import { Modal } from 'bootstrap';
 import { useParams } from 'react-router-dom';
 import CreateNotebook from '../modals/CreateNotebook';
 import useNewNotebook from '../hooks/useNewNotebook';
+import { TYPES } from '../constants';
 
 const Dashboard = props => {
 	let { notebook: NOTEBOOK, group: GROUP, id: ID } = useParams();
@@ -25,7 +26,7 @@ const Dashboard = props => {
 		} else {
 			return notebooks[0].id
 		}
-	}, [ID, NOTEBOOK, GROUP, notebooks, groups]);
+	}, [NOTEBOOK, GROUP, notebooks, groups]);
 
 	const currentNotes = useMemo(() => {
 		if (NOTEBOOK) {
@@ -62,11 +63,13 @@ const Dashboard = props => {
 					notebookId={currentId}
 					notebookName={NOTEBOOK}
 					notes={currentNotes}
+					type={TYPES.PERSONAL}
 				/> : GROUP ?
 					<Notebook
 						notebookId={currentId}
 						notebookName={GROUP}
 						notes={currentNotes}
+						type={TYPES.SHARED}
 					/> : (
 						<div
 							className='d-flex min-vh-100 flex-column justify-content-center align-items-center mx-auto py-3'>

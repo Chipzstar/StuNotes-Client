@@ -2,6 +2,7 @@ import firebase from 'firebase/app';
 import 'firebase/auth';
 import 'firebase/firestore';
 import 'firebase/functions';
+import 'firebase/database';
 
 import { TYPES } from './constants';
 
@@ -95,10 +96,17 @@ export const createNotebookNote = async (uid, notebookId, docId, title, author) 
 	});
 };
 
-export const updateNote = async (uid, docId, data) => {
+export const updateNote = async (uid, type, docId, data) => {
+	console.log("Data to update:", data)
 	return new Promise(async (resolve, reject) => {
 		try {
-			const Ref = store.collection(`root/${uid}/notes`);
+			if (type === TYPES.SHARED) {
+				let currentRef = store.collection(`current`);
+				await currentRef.doc(docId).update({
+					...data
+				});
+			}
+			let Ref = store.collection(`root/${uid}/notes`);
 			await Ref.doc(docId).update({
 				...data
 			});

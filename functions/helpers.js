@@ -32,7 +32,13 @@ async function updateGroupNoteRefs(dest, refs){
 	return null
 }
 
+function convertToDate(data){
+	let comments = data.comments.map(c => ({...c, createdAt: new Date(c.createdAt)}))
+	return { ...data, comments }
+}
+
 module.exports = {
 	copyNotes,
-	updateGroupNoteRefs
+	updateGroupNoteRefs,
+	convertToDate
 }

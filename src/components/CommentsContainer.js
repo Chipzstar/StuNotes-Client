@@ -6,8 +6,8 @@ const CommentsContainer = ({ comments, submit }) => {
 	return (
 		<div className='d-flex flex-grow-1 flex-column justify-content-between'>
 			<ul className='list-group'>
-				{comments.map(({ comment, author, createdAt }) => (
-					<li className='list-group-item rounded-5 border-0'>
+				{comments.map(({ comment, author, createdAt }, index) => (
+					<li key={index} className='list-group-item rounded-5 border-0'>
 						<Comment comment={comment} author={author} createdAt={createdAt} />
 					</li>
 				))}

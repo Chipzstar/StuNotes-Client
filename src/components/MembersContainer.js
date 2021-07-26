@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useParams } from 'react-router-dom';
 import { COLOURS } from '../constants';
 import { useMeasure } from 'react-use';
@@ -8,10 +8,6 @@ import HorizontalScrollbar from './HorizontalScrollbar';
 const MembersContainer = ({ members }) => {
 	const { id: ID } = useParams();
 	const [ref, { width: outerDivWidth }] = useMeasure();
-
-	useEffect(() => {
-		console.log('Members:', members);
-	}, [ID, members]);
 
 	return (
 		<div className='d-flex'>

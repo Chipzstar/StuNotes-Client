@@ -8,8 +8,8 @@ import { WebsocketProvider } from 'y-websocket';
 import { QuillBinding } from 'y-quill';
 import withStore from '../hoc/withStore';
 import { AuthContext } from '../contexts/AuthContext';
-import { TYPES } from '../constants';
-import { CgComment} from 'react-icons/cg';
+import { COLOURS, TYPES } from '../constants';
+import { CgComment } from 'react-icons/cg';
 
 Quill.register('modules/cursors', QuillCursors);
 
@@ -115,7 +115,12 @@ class QuillEditor extends React.Component {
 		if (this.quill === null) {
 			this.quill = new Quill(document.querySelector('#editor'), {
 				modules: {
-					cursors: true,
+					cursors: {
+						hideDelayMs: 5000,
+						hideSpeedMs: 0,
+						selectionChangeSource: null,
+						transformationOnTextChange: true,
+					},
 					toolbar: '#toolbar',
 					history: {
 						// Local undo shouldn't undo changes
@@ -127,15 +132,19 @@ class QuillEditor extends React.Component {
 				theme: 'snow' // 'bubble' is also great
 			});
 		}
-		this.wsProvider = new WebsocketProvider('ws://localhost:1234', room, this.yDoc); // change to
+		this.wsProvider = new WebsocketProvider('ws://localhost:1234', room, this.yDoc);
+		this.wsProvider.awareness["setLocalStateField"]("user", {
+			name: this.context.displayName,
+			color: COLOURS[Math.floor(Math.random() * COLOURS.length)]
+		})
 		this.binding = new QuillBinding(this.yText, this.quill, this.wsProvider.awareness);
 	};
 
 	onNewComment = () => {
 		let { notebookId, room } = this.props;
-		this.quill.focus()
+		this.quill.focus();
 		let range = this.quill.getSelection();
-		console.log(range)
+		console.log(range);
 		let comment = prompt('Please enter Comment', '');
 		console.log(comment);
 		if (comment == null || comment === '') {
@@ -151,18 +160,14 @@ class QuillEditor extends React.Component {
 					this.quill.formatText(range.index, range.length, {
 						background: '#fff72b'
 					});
-					this.props.toggleComments()
+					this.props.toggleComments();
 				}
 			} else {
 				alert('User cursor is not in editor');
 			}
 		}
-		this.quill.blur()
+		this.quill.blur();
 	};
-
-	addComment() {
-		console.log('Comment Added Successfully!');
-	}
 
 	render() {
 		return (
@@ -216,8 +221,8 @@ class QuillEditor extends React.Component {
 					<span className='ql-formats'>
 			      <button className='ql-clean' />
 			    </span>
-					<span className='ql-formats' role="button">
-						<CgComment size={19} className="mb-1" onClick={this.props.toggleComments}/>
+					<span className='ql-formats' role='button'>
+						<CgComment size={19} className='mb-1' onClick={this.props.toggleComments} />
 					</span>
 				</div>
 				<div id='editor' className='text-editor border-0' style={{ fontSize: '100%' }} />

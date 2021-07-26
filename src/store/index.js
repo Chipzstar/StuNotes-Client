@@ -2,7 +2,6 @@ import create from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { groupNoteSchema, groupSchema, notebookNoteSchema, notebookSchema } from '../schemas';
 import {
-	createComment,
 	createGroup,
 	createGroupNote,
 	createNotebook,
@@ -18,6 +17,7 @@ import {
 	sendInvite,
 	updateNotebook
 } from '../firebase';
+import { TYPES } from '../constants';
 
 let notesStore = (set, get) => ({
 	notebooks: [],
@@ -101,6 +101,7 @@ let notesStore = (set, get) => ({
 				notes: group.notes.map(note => note.id === noteId ? { ...note, ...data } : note)
 			} : group)
 		}));
+		return get().groups.find(g => g.id === groupId);
 	},
 	addTag: async (uid, notebookId, id, tag) => {
 		await createTag(uid, id, tag);
@@ -125,9 +126,7 @@ let notesStore = (set, get) => ({
 				} : group)
 		}));
 	},
-	addComment: async (uid, notebookId, id, comment) => {
-		let result = await createComment(uid, id, comment);
-		console.log(result)
+	addComment: (uid, type, notebookId, id, comment) => type === TYPES.PERSONAL ?
 		set(state => ({
 			notebooks: state.notebooks.map((notebook, index) =>
 				index === 0 || notebook.id === notebookId ?
@@ -137,7 +136,9 @@ let notesStore = (set, get) => ({
 								...note,
 								comments: [...note.comments, comment]
 							} : note)
-					} : notebook),
+					} : notebook)
+		})) :
+		set(state => ({
 			groups: state.groups.map(group => group.id === notebookId ?
 				{
 					...group,
@@ -147,8 +148,7 @@ let notesStore = (set, get) => ({
 							comments: [...note.comments, comment]
 						} : note)
 				} : group)
-		}));
-	},
+		})),
 	removeTag: async (uid, notebookId, id, tag) => {
 		await deleteTag(uid, id, tag);
 		set(state => ({

@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import PropTypes from 'prop-types';
 import { useParams } from 'react-router-dom';
 import { Offcanvas } from 'react-bootstrap';
-import { TYPES } from '../constants';
 //images
 import document from '../assets/svg/document.svg';
 import team from '../assets/svg/team.svg';
@@ -20,6 +19,7 @@ import NewMemberForm from '../modals/NewMemberForm';
 import CommentsContainer from './CommentsContainer';
 
 const NoteContainer = ({
+	                       type,
 	                       notebookId,
 	                       notebookName,
 	                       status,
@@ -38,6 +38,8 @@ const NoteContainer = ({
                        }) => {
 	const { notebook: NOTEBOOK, group: GROUP } = useParams();
 	const { groups, notebooks, addMember } = useNotesStore(useCallback(state => state, []));
+
+
 	const [tag, setTag] = useState('');
 	const [showMembers, setShowMembers] = useState(false);
 	const [showComments, setShowComments] = useState(false);
@@ -54,7 +56,8 @@ const NoteContainer = ({
 			setTag(value.toLowerCase());
 		}, []);
 
-	const type = useMemo(() => NOTEBOOK ? TYPES.PERSONAL : GROUP ? TYPES.SHARED : null, [NOTEBOOK, GROUP]);
+	//TODO - check if passing "type" as a prop can replace type memo
+	//const type = useMemo(() => NOTEBOOK ? TYPES.PERSONAL : GROUP ? TYPES.SHARED : null, [NOTEBOOK, GROUP]);
 
 	//TODO - debug editor slow response when typing
 	const hasNotes = useMemo(() => {
@@ -188,8 +191,8 @@ const NoteContainer = ({
 					</Offcanvas.Title>
 				</Offcanvas.Header>
 				<hr className='border' />
-				<Offcanvas.Body className="d-flex">
-					<CommentsContainer comments={comments} submit={onNewComment}/>
+				<Offcanvas.Body className='d-flex'>
+					<CommentsContainer comments={comments} submit={onNewComment} />
 				</Offcanvas.Body>
 			</Offcanvas>
 		</div>
@@ -197,14 +200,15 @@ const NoteContainer = ({
 };
 
 NoteContainer.propTypes = {
+	type: PropTypes.string.isRequired,
 	notebookId: PropTypes.string.isRequired,
 	notebookName: PropTypes.string.isRequired,
 	noteId: PropTypes.string.isRequired,
 	title: PropTypes.string.isRequired,
 	author: PropTypes.string.isRequired,
 	tags: PropTypes.array.isRequired,
-	members: PropTypes.array.isRequired,
 	comments: PropTypes.array.isRequired,
+	members: PropTypes.array.isRequired,
 	onTitleChange: PropTypes.func.isRequired,
 	onDescriptionChange: PropTypes.func.isRequired,
 	onNewTag: PropTypes.func.isRequired,

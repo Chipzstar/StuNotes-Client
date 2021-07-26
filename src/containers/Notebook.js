@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useHistory, useParams } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
 import moment from 'moment';
-import debounce from 'lodash.debounce';
+import debounce from 'lodash/debounce';
 //components
 import NoteList from '../components/NoteList';
 import NoteContainer from '../components/NoteContainer';
@@ -18,15 +18,17 @@ import { Modal } from 'bootstrap';
 import { TYPES } from '../constants';
 //hooks
 import { useNotesStore } from '../store';
-import { updateMemberNotes, updateNote } from '../firebase';
+import { store, updateMemberNotes, updateNote } from '../firebase';
 import useCalendar from '../hooks/useCalendar';
 import useNewNotebook from '../hooks/useNewNotebook';
 import useNewGroup from '../hooks/useNewGroup';
+//function
+import { checkEquality, noteToFirestore, noteToJS } from '../functions';
 //styles
 import '../stylesheets/App.css';
 import 'react-calendar/dist/Calendar.css';
 
-const Notebook = ({ notebookId, notebookName, notes }) => {
+const Notebook = ({ notebookId, notebookName, notes, type }) => {
 	//hooks
 	const user = useAuth();
 	const history = useHistory();
@@ -59,10 +61,10 @@ const Notebook = ({ notebookId, notebookName, notes }) => {
 	const [noteCount, setNoteCount] = useState(notes.length);
 	const [filteredNotes, setFilteredNotes] = useState(notes);
 	const [sortOrder, setSort] = useState('default');
-	const [title, setTitle] = useState(notes.length ? notes[0].title : 'Untitled');
-	const [author, setAuthor] = useState(user.displayName);
-	const [tags, setTags] = useState(notes.length ? notes[0].tags : []);
-	const [comments, setComments] = useState(notes.length ? notes[0].comments : []);
+	const [title, setTitle] = useState(ID ? notes.find(note => note.id === ID).title : notes.length ? notes[0].title : 'Untitled');
+	const [author, setAuthor] = useState(ID ? notes.find(note => note.id === ID).author : user.displayName);
+	const [tags, setTags] = useState(ID ? notes.find(note => note.id === ID).tags : notes.length ? notes[0].tags : []);
+	const [comments, setComments] = useState(ID ? notes.find(note => note.id === ID).comments : notes.length ? notes[0].comments : []);
 	const [status, setStatus] = useState('All changes saved');
 	const [calendarModal, showCalendarModal] = useState(false);
 	const [notebookModal, showNotebookModal] = useState(false);
@@ -93,6 +95,23 @@ const Notebook = ({ notebookId, notebookName, notes }) => {
 		setNoteCount(notes.length);
 		setFilteredNotes(notes);
 	}, [notes]);
+
+	useEffect(() => {
+		if (GROUP && ID) {
+			const note = noteToFirestore(notes.find(note => note.id === ID));
+			let ref = store.doc(`current/${ID}`);
+			ref.onSnapshot(snapshot => {
+				console.count('firing observer');
+				if (!snapshot.exists) {
+					ref.set({ ...note }).then(() => console.log('Note reference created!'));
+				} else if (!checkEquality(snapshot, note)) {
+					let data = noteToJS(snapshot.data());
+					updateGroupNote(notebookId, noteId, data);
+					console.log('zustand note updated');
+				}
+			});
+		}
+	}, [NOTEBOOK, GROUP, ID]);
 
 	function filterNotesByDate(date) {
 		setFilteredNotes(() => notes.filter(item => moment(item.createdAt).startOf('day').isSameOrBefore(date)));
@@ -172,10 +191,13 @@ const Notebook = ({ notebookId, notebookName, notes }) => {
 			comment: value,
 			index: null,
 			length: null
-		}
+		};
 		setComments(prevState => {
-			addComment(user.uid, notebookId, noteId, comment);
-			return [...prevState, comment];
+			prevState.forEach((c, index) => prevState[index]['createdAt'] = new Date(c.createdAt));
+			let newComments = [...prevState, comment];
+			addComment(user.uid, type, notebookId, noteId, comment);
+			debouncedChangeHandler(noteId, { comments: newComments });
+			return newComments;
 		});
 	};
 
@@ -188,30 +210,40 @@ const Notebook = ({ notebookId, notebookName, notes }) => {
 
 	async function update(id, data) {
 		console.table({ ...data });
-		let result = await updateNote(user.uid, id, data);
-		console.log(result);
-		members.length && updateMemberNotes({ members, noteId, data })
-			.then(res => console.log(res))
-			.catch(err => console.error(err));
+		await updateNote(user.uid, type, id, data);
+		if ('comments' in data) data.comments.forEach((c, index) => data.comments[index]['createdAt'] = c.createdAt.getTime());
+		members.length > 1 && updateMemberNotes({ members, id, data }).catch(err => console.error(err));
 	}
 
 	return (
 		<div id='page-content-wrapper' className='row flex-nowrap'>
 			<CalendarPicker date={date} onChangeHandler={handleDateChange} modalRef={calendarRef} />
-			<CreateNotebook type={TYPES.PERSONAL} ref={notebookRef} name={newNotebookName}
-			                onChange={handleChangeNotebook} onSubmit={(e) => {
-				handleSubmitNotebook(e).then(name => {
-					notebookModal.hide();
-					history.push(`/notebooks/${name}`);
-				}).catch((err) => console.error(err));
-			}} />
-			<CreateNotebook type={TYPES.SHARED} ref={groupRef} name={newGroupName} onChange={handleChangeGroup}
-			                onSubmit={(e) => {
-				                handleSubmitGroup(e).then(name => {
-					                groupModal.hide();
-					                history.push(`/groups/${name}`);
-				                }).catch((err) => console.error(err));
-			                }} />
+			<CreateNotebook
+				type={TYPES.PERSONAL}
+				ref={notebookRef}
+				name={newNotebookName}
+				onChange={handleChangeNotebook}
+				onSubmit={(e) => handleSubmitNotebook(e)
+					.then(name => {
+						notebookModal.hide();
+						history.push(`/notebooks/${name}`);
+					})
+					.catch((err) => console.error(err))
+				}
+			/>
+			<CreateNotebook
+				type={TYPES.SHARED}
+				ref={groupRef}
+				name={newGroupName}
+				onChange={handleChangeGroup}
+				onSubmit={(e) => handleSubmitGroup(e)
+					.then(name => {
+						groupModal.hide();
+						history.push(`/groups/${name}`);
+					})
+					.catch((err) => console.error(err))
+				}
+			/>
 			<div className='col-sm-4 col-md-3 col-xl-3 bg-light'>
 				<div className='d-flex flex-column pt-2 ps-2 text-dark min-vh-100'>
 					<NotebookNav
@@ -247,10 +279,9 @@ const Notebook = ({ notebookId, notebookName, notes }) => {
 					</div>
 				</div>
 			</div>
-			{/*TODO - add conditional rendering for notebooks and groups*/}
-
 			<div className='col py-3'>
 				<NoteContainer
+					type={type}
 					notebookId={notebookId}
 					notebookName={notebookName}
 					noteId={noteId}

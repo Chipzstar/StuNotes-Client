@@ -17,14 +17,16 @@ const SideBar = ({ width }) => {
 	const { groups, notebooks, clearAll, removeNotebook, removeGroup } = useNotesStore();
 	//state
 	const [show, setShow] = useState(false);
+	const [notebookId, setId] = useState(null);
 	const [targetNotebook, setNotebookTarget] = useState(null);
 	const [targetGroup, setGroupTarget] = useState(null);
 	//refs
 	const ref = useRef(null);
 
-	const togglePopupMenu = (event, type) => {
+	const togglePopupMenu = (event, type, id) => {
 		event.preventDefault();
 		setShow(!show);
+		setId(id)
 		type === 'notebook' ? setNotebookTarget(event.target) : setGroupTarget(event.target);
 	};
 
@@ -108,12 +110,12 @@ const SideBar = ({ width }) => {
 														<div
 															className='dropdown-item'
 															onMouseDown={(e) => e.preventDefault()}
-															onClick={() => removeNotebook(user.uid, id)
+															onClick={() => removeNotebook(user.uid,  removeGroup(user.uid, id)
 																.then(() => {
-																	history.push(HOME_URL);
+																	history.push(HOME_URL)
 																	setShow(false);
 																})
-																.catch(err => console.error(err))
+																.catch((err) => console.error(err)))
 															}
 															style={{ color: 'red' }}>Delete
 														</div>
@@ -147,7 +149,7 @@ const SideBar = ({ width }) => {
 										>
 											{name}
 										</NavLink>
-										<span role='button' onClick={(e) => togglePopupMenu(e, 'group')}>
+										<span role='button' onClick={(e) => togglePopupMenu(e, 'group', id)}>
 											<IoEllipsisVerticalSharp size={14} />
 										</span>
 										<Overlay
@@ -171,13 +173,11 @@ const SideBar = ({ width }) => {
 														<div
 															className='dropdown-item'
 															onMouseDown={(e) => e.preventDefault()}
-															onClick={() => removeGroup(user.uid, id)
-																.then(() => {
-																	history.push(HOME_URL)
-																	setShow(false);
-																})
-																.catch((err) => console.error(err))
-															}
+															onClick={() => removeGroup(user.uid, notebookId).then(() => {
+																history.push(HOME_URL);
+																setShow(false);
+															})
+																.catch(err => console.error(err))}
 															style={{ color: 'red' }}>Delete
 														</div>
 													</div>
