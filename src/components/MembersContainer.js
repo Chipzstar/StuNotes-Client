@@ -1,12 +1,10 @@
 import React from 'react';
-import { useParams } from 'react-router-dom';
 import { COLOURS } from '../constants';
 import { useMeasure } from 'react-use';
 import PropTypes from 'prop-types';
 import HorizontalScrollbar from './HorizontalScrollbar';
 
 const MembersContainer = ({ members }) => {
-	const { id: ID } = useParams();
 	const [ref, { width: outerDivWidth }] = useMeasure();
 
 	return (

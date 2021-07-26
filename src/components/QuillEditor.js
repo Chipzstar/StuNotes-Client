@@ -140,7 +140,7 @@ class QuillEditor extends React.Component {
 		this.binding = new QuillBinding(this.yText, this.quill, this.wsProvider.awareness);
 	};
 
-	onNewComment = () => {
+	/*onNewComment = () => {
 		let { notebookId, room } = this.props;
 		this.quill.focus();
 		let range = this.quill.getSelection();
@@ -160,14 +160,13 @@ class QuillEditor extends React.Component {
 					this.quill.formatText(range.index, range.length, {
 						background: '#fff72b'
 					});
-					this.props.toggleComments();
 				}
 			} else {
 				alert('User cursor is not in editor');
 			}
 		}
 		this.quill.blur();
-	};
+	};*/
 
 	render() {
 		return (
