@@ -12,8 +12,12 @@ import Dashboard from '../pages/Dashboard';
 let routes = (
 	<Switch>
 		<Route exact path='/'>
-			<Navbar />
-			<Landing />
+			<div className='app-container bg-primary d-flex flex-column'>
+				<Navbar />
+				<div className="d-flex flex-column flex-grow-1 justify-content-center">
+					<Landing />
+				</div>
+			</div>
 		</Route>
 		<Route path='/login' render={(props) => (
 			<>

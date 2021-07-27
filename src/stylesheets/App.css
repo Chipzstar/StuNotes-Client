@@ -12,7 +12,14 @@
     box-sizing: border-box;
 }
 
-.app-container {}
+.app-container {
+    min-height: 100vh;
+    height: 100%;
+}
+
+.wrapper {
+    height: 90%;
+}
 
 .fixed-container {
     overflow-y: hidden;

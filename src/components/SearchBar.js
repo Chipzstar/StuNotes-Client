@@ -2,7 +2,7 @@ import React from 'react';
 
 const SearchBar = ({ onSearch }) => {
 	return (
-		<div className='form-floating input-group form-outline w-100'>
+		<div className='form-floating input-group form-outline'>
 			<input
 				placeholder="search..."
 				id='search-lg'
