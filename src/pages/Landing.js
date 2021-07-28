@@ -9,7 +9,7 @@ import { HOME_URL } from '../constants';
 class Landing extends Component {
 	render() {
 		return (
-			<div className='container-fluid bg-primary py-5 text-black'>
+			<div className='container-fluid d-flex flex-column flex-grow-1 py-5 text-black'>
 				<div className='jumbotron py-2 pb-5 px-5'>
 					<h1 className='display-3 font-weight-bold'>Welcome to StuNotes</h1>
 					<hr className='my-2' />
@@ -24,7 +24,7 @@ class Landing extends Component {
 						</Link>
 					</div>
 				</div>
-				<div className='row'>
+				<div className='row d-flex flex-grow-1 align-items-center'>
 					<div className='col-xl-4 col-lg-4 col-md-4 col-sm-12 px-3'>
 						<div className='d-flex flex-row justify-content-center icon-container'>
 							<img

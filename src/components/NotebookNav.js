@@ -7,7 +7,7 @@ import { AiOutlinePlus } from 'react-icons/ai';
 
 const NotebookNav = ({ onSearch, onNewNote, onNewNotebook, onNewGroupLibrary }) => {
 	return (
-		<div className='d-flex flex-row align-items-center px-2 py-3'>
+		<div className='d-flex flex-row align-items-center justify-content-between px-2 py-3'>
 			<div
 				id='sidebarToggle'
 				role='button'
@@ -17,7 +17,7 @@ const NotebookNav = ({ onSearch, onNewNote, onNewNotebook, onNewGroupLibrary }) 
 			>
 				<IoMdMenu size={35} />
 			</div>
-			<div className='px-3'>
+			<div className='px-3 w-100'>
 				<SearchBar onSearch={onSearch} />
 			</div>
 			<div className='d-flex justify-content-center align-items-center'>
