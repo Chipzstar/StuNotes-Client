@@ -29,6 +29,7 @@ class QuillEditor extends React.Component {
 	}
 
 	componentDidMount() {
+		console.log("SERVER URL:", process.env.SERVER_URL)
 		const { type, notebookId, room } = this.props;
 		console.table({ type, notebookId, room });
 		//this.persistence = new IndexeddbPersistence(room, yDoc);
