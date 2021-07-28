@@ -132,7 +132,7 @@ class QuillEditor extends React.Component {
 				theme: 'snow' // 'bubble' is also great
 			});
 		}
-		this.wsProvider = new WebsocketProvider('ws://git.heroku.com/stunotes-server.git', room, this.yDoc);
+		this.wsProvider = new WebsocketProvider(process.env.SERVER_URL || 'ws:localhost:1234', room, this.yDoc);
 		this.wsProvider.awareness["setLocalStateField"]("user", {
 			name: this.context.displayName,
 			color: COLOURS[Math.floor(Math.random() * COLOURS.length)]
