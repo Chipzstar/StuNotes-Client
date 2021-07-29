@@ -29,7 +29,7 @@ class QuillEditor extends React.Component {
 	}
 
 	componentDidMount() {
-		console.log("SERVER URL:", process.env.SERVER_URL)
+		console.log("SERVER URL:", process.env.REACT_APP_SERVER_URL)
 		const { type, notebookId, room } = this.props;
 		console.table({ type, notebookId, room });
 		//this.persistence = new IndexeddbPersistence(room, yDoc);
@@ -133,7 +133,7 @@ class QuillEditor extends React.Component {
 				theme: 'snow' // 'bubble' is also great
 			});
 		}
-		this.wsProvider = new WebsocketProvider(process.env.SERVER_URL || 'ws:localhost:1234', room, this.yDoc);
+		this.wsProvider = new WebsocketProvider(process.env.REACT_APP_SERVER_URL || 'ws:localhost:1234', room, this.yDoc);
 		this.wsProvider.awareness["setLocalStateField"]("user", {
 			name: this.context.displayName,
 			color: COLOURS[Math.floor(Math.random() * COLOURS.length)]
