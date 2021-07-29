@@ -84,7 +84,7 @@ const NoteContainer = ({
 					<div className='d-flex flex-row align-items-center'>
 						{NOTEBOOK ? <img src={document} width={25} height={25} alt='' /> :
 							<img src={team} width={30} height={30} alt='' />}
-						<span className='lead text-capitalize font-weight-bold ps-3'>{notebookName}</span>
+						<span className='lead text-capitalize fw-bold ps-3'>{notebookName}</span>
 					</div>
 					{GROUP && <div role='button' className='btn btn-sm btn-success text-lowercase mx-3'
 					               onClick={() => setShowMembers(true)}>
@@ -145,7 +145,7 @@ const NoteContainer = ({
 							<span className='text-muted font-italic'>{status}</span>
 						</div>
 						<div>
-							<span>Author: <span className='font-weight-bold'>{author}</span></span>
+							<span>Author: <span className='fw-bold'>{author}</span></span>
 						</div>
 					</div>
 					<hr className='border-2' />
