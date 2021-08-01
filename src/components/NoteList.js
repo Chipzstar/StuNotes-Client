@@ -24,10 +24,6 @@ const NoteList = ({ uid, collectionId, filteredData, onSelect }) => {
 	//memos
 	const type = useMemo(() => NOTEBOOK ? TYPES.PERSONAL : GROUP ? TYPES.SHARED : null, [GROUP, NOTEBOOK]);
 
-	useEffect(() => {
-		console.log("Type:", type)
-	}, [type])
-
 	const activeDoc = classNames({
 		'list-group-item': true,
 		'rounded-5': true,

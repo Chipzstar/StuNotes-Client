@@ -78,10 +78,10 @@ const SideBar = ({ width }) => {
 						</a>
 						<div id='personal-notebook' className='collapse'>
 							<ul className='btn-toggle-nav list-unstyled fw-normal pb-1 small'>
-								{notebooks.map(({ id, name }, index) => index !== 0 && (
+								{notebooks.map(({ id, name, notes }, index) => index !== 0 && (
 									<li key={id} tabIndex={1} onBlur={() => setShow(false)} ref={ref}>
 										<NavLink
-											to={`/notebooks/${name}`}
+											to={notes.length ? `/notebooks/${name}/${notes[0].id}` : `/notebooks/${name}`}
 											className='link-dark rounded'
 										>
 											{name}
@@ -141,10 +141,10 @@ const SideBar = ({ width }) => {
 						</a>
 						<div id='group-notebook' className='collapse'>
 							<ul className='btn-toggle-nav list-unstyled fw-normal pb-1 small'>
-								{groups.map(({ id, name }) => (
+								{groups.map(({ id, name, notes }) => (
 									<li key={id} tabIndex={1} onBlur={() => setShow(false)} ref={ref}>
 										<NavLink
-											to={`/groups/${name}`}
+											to={notes.length ? `/groups/${name}/${notes[0].id}` : `/groups/${name}`}
 											className='link-dark rounded'
 										>
 											{name}
