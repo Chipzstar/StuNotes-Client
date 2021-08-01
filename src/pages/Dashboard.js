@@ -47,7 +47,7 @@ const Dashboard = props => {
 		<div className='container-fluid fixed-container' ref={ref}>
 			<CreateNotebook
 				ref={notebookRef}
-				type='notebook'
+				type={TYPES.PERSONAL}
 				name={name}
 				onSubmit={(e) => {
 					handleSubmit(e).then(name => {

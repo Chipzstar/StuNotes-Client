@@ -97,6 +97,7 @@ const Notebook = ({ notebookId, notebookName, notes, type }) => {
 	}, [notes]);
 
 	useEffect(() => {
+		console.log("TYPE:", type)
 		if (GROUP && ID) {
 			const note = noteToFirestore(notes.find(note => note.id === ID));
 			let ref = store.doc(`current/${ID}`);
