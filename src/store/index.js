@@ -189,7 +189,7 @@ let notesStore = (set, get) => ({
 		}));
 	},
 	removeNotebookNote: async (uid, type, notebookId, id) => {
-		let result = await deleteNote(uid, type, notebookId, id);
+		let result = await deleteNote(uid, type, notebookId, id, []);
 		console.log(result);
 		set(state => ({
 			notebooks: state.notebooks.map((notebook, index) => index === 0 || notebook.id === notebookId ? {
@@ -227,9 +227,9 @@ let notesStore = (set, get) => ({
 			} : notebook)
 		}));
 	},
-	addGroupNote: async (uid, groupId, noteId, title, author) => {
+	addGroupNote: async (uid, groupId, noteId, title, author, members) => {
 		console.table({ groupId, noteId });
-		let result = await createGroupNote(uid, groupId, noteId, title, author);
+		let result = await createGroupNote(uid, groupId, noteId, title, author, members);
 		console.log(result);
 		set(state => ({
 			groups: state.groups.map(item => item.id === groupId ? {
@@ -246,7 +246,8 @@ let notesStore = (set, get) => ({
 		}));
 	},
 	removeGroupNote: async (uid, type, groupId, id) => {
-		let result = await deleteNote(uid, type, groupId, id);
+		let members = get().groups.find(group => group.id === groupId).members
+		let result = await deleteNote(uid, type, groupId, id, members);
 		console.log(result);
 		set(state => ({
 			groups: state.groups.map(group => group.id === groupId ? {

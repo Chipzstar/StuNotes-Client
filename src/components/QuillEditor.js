@@ -20,12 +20,14 @@ class QuillEditor extends React.Component {
 		super(props);
 		this.state = {
 			isMounted: null,
-			metaData: []
+			metaData: [],
+			height: 500
 		};
 		this.binding = null;
 		this.quill = null;
 		this.wsProvider = null;
 		this.awareness = null;
+		this.editorRef = React.createRef();
 	}
 
 	componentDidMount() {
@@ -45,6 +47,8 @@ class QuillEditor extends React.Component {
 		*/
 		type === TYPES.SHARED ? this.initGroupObservers(notebookId, room) : this.initNotebookObservers(room);
 		window.addEventListener('blur', () => this.quill.blur());
+		this.setState({height: this.editorRef.current.clientHeight}, () => console.log("Current height:", this.state.height))
+		//this.resizeObserver.observe(document.getElementById("editor-wrapper"))
 	}
 
 	shouldComponentUpdate(nextProps, nextState, nextContext) {
@@ -59,8 +63,14 @@ class QuillEditor extends React.Component {
 	componentWillUnmount() {
 		//this.persistence.destroy()
 		this.wsProvider.destroy();
-		this.yDoc.destroy();
+		//this.yDoc.destroy();
 	}
+
+	/*resizeObserver = new ResizeObserver(entries => {
+		const height = entries[0].target.clientHeight
+		console.log("Current height:", height)
+		this.setState({ height })
+	})*/
 
 	initNotebookObservers(room) {
 		this.yText.observe(() => {
@@ -129,6 +139,7 @@ class QuillEditor extends React.Component {
 						userOnly: true
 					}
 				},
+				scrollingContainer: "#editor-container",
 				placeholder: 'Write something here...',
 				theme: 'snow' // 'bubble' is also great
 			});
@@ -171,7 +182,7 @@ class QuillEditor extends React.Component {
 
 	render() {
 		return (
-			<div>
+			<div id="editor-wrapper" className="d-flex flex-column flex-grow-1">
 				<div id='toolbar' className='border-0'>
 				<span className='ql-formats'>
 					<select className='ql-font' />
@@ -225,7 +236,14 @@ class QuillEditor extends React.Component {
 						<CgComment size={19} className='mb-1' onClick={this.props.toggleComments} />
 					</span>
 				</div>
-				<div id='editor' className='text-editor border-0' style={{ fontSize: '100%' }} />
+				<div
+					ref={this.editorRef}
+					id="editor-container"
+					className="d-flex flex-column flex-grow-1 overflow-auto"
+					style={{height: this.state.height}}
+				>
+					<div id='editor' className='text-editor border-0 h-auto' style={{ fontSize: '100%' }} />
+				</div>
 			</div>
 		);
 	}

@@ -125,7 +125,7 @@ const Notebook = ({ notebookId, notebookName, notes, type }) => {
 				await addNotebookNote(user.uid, notebookId, id, 'Untitled', author);
 				history.push(`/notebooks/${notebookName}/${id}`);
 			} else {
-				await addGroupNote(user.uid, notebookId, id, 'Untitled', author);
+				await addGroupNote(user.uid, notebookId, id, 'Untitled', user.displayName, members);
 				history.push(`/groups/${notebookName}/${id}`);
 			}
 		} catch (e) {
@@ -221,8 +221,8 @@ const Notebook = ({ notebookId, notebookName, notes, type }) => {
 		<div id='page-content-wrapper' className='row flex-nowrap'>
 			<CalendarPicker date={date} onChangeHandler={handleDateChange} modalRef={calendarRef} />
 			<CreateNotebook
-				type={TYPES.PERSONAL}
 				ref={notebookRef}
+				type={TYPES.PERSONAL}
 				name={newNotebookName}
 				onChange={handleChangeNotebook}
 				onSubmit={(e) => handleSubmitNotebook(e)
@@ -234,8 +234,8 @@ const Notebook = ({ notebookId, notebookName, notes, type }) => {
 				}
 			/>
 			<CreateNotebook
-				type={TYPES.SHARED}
 				ref={groupRef}
+				type={TYPES.SHARED}
 				name={newGroupName}
 				onChange={handleChangeGroup}
 				onSubmit={(e) => handleSubmitGroup(e)

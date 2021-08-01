@@ -117,7 +117,7 @@ export const updateNote = async (uid, type, docId, data) => {
 	});
 };
 
-export const deleteNote = async (uid, type, collectionId, noteId) => {
+export const deleteNote = async (uid, type, collectionId, noteId, members) => {
 	return new Promise(async (resolve, reject) => {
 		try {
 			console.table({uid, type, collectionId, noteId})
@@ -131,6 +131,10 @@ export const deleteNote = async (uid, type, collectionId, noteId) => {
 				console.log(await Ref.get());
 			}
 			await noteRef.delete();
+			members.length > 1 && removeMemberNotes({members,
+				noteId,
+				groupId: collectionId
+			}).then(res => console.log(res)).catch(err => console.error(err))
 			resolve('Note Deleted Successfully!');
 		} catch (err) {
 			reject(err);
@@ -302,16 +306,14 @@ export const deleteGroup = async (uid, docId) => {
 	});
 };
 
-export const createGroupNote = async (uid, groupId, docId, title, author) => {
+export const createGroupNote = async (uid, groupId, noteId, title, author, members) => {
 	return new Promise(async (resolve, reject) => {
 		try {
-			const noteRef = store.doc(`root/${uid}/notes/${docId}`);
-			if (uid !== groupId) {
-				const groupRef = store.doc(`root/${uid}/groups/${groupId}`);
-				await groupRef.update({
-					notes: firebase.firestore.FieldValue.arrayUnion(noteRef)
-				});
-			}
+			const noteRef = store.doc(`root/${uid}/notes/${noteId}`);
+			const groupRef = store.doc(`root/${uid}/groups/${groupId}`);
+			await groupRef.update({
+				notes: firebase.firestore.FieldValue.arrayUnion(noteRef)
+			});
 			await noteRef.set({
 				...groupNoteSchema,
 				title,
@@ -319,6 +321,13 @@ export const createGroupNote = async (uid, groupId, docId, title, author) => {
 				groupId,
 				createdAt: new Date(),
 			});
+			members.length > 1 && addMemberNotes({
+				members,
+				noteId,
+				data: { ...groupNoteSchema, createdAt: new Date().getTime(), groupId, author }
+			})
+				.then((res) => console.log(res))
+				.catch(err => console.error(err));
 			resolve(`Note Created Successfully!`)
 		} catch (e) {
 			console.error(e);
@@ -347,5 +356,9 @@ export const fetchGroups = async (uid) => {
 export const sendInvite = func.httpsCallable('sendInvite')
 
 export const updateMemberNotes = func.httpsCallable('updateMemberNotes')
+
+export const addMemberNotes = func.httpsCallable('addMemberNotes')
+
+export const removeMemberNotes = func.httpsCallable('removeMemberNotes')
 
 export default app;

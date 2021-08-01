@@ -14,10 +14,10 @@ export function checkEquality (snapshot, orig) {
 		title,
 		description,
 	}
-	console.log("firestore")
+	/*console.log("firestore")
 	console.table({ ...res })
 	console.log("zustand")
-	console.table({ ...orig })
+	console.table({ ...orig })*/
 	const isSame = isEqual(res, orig)
 	console.log(isSame)
 	return isSame

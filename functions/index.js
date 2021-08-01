@@ -1,5 +1,7 @@
 const admin = require('firebase-admin');
-const cors = require('cors')({ origin: true });
+const cors = require('cors')({
+	origin: true
+});
 const newMember = require('./newMember');
 const updateMember = require('./updateMember');
 
@@ -10,7 +12,6 @@ admin.initializeApp({
 });
 
 exports.sendInvite = newMember.sendInvite;
+exports.addMemberNotes = updateMember.addMemberNotes;
 exports.updateMemberNotes = updateMember.updateMemberNotes;
-
-
-
+exports.removeMemberNotes = updateMember.removeMemberNotes;

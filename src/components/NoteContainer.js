@@ -70,7 +70,7 @@ const NoteContainer = ({
 	}, [NOTEBOOK, GROUP, notebooks, groups]);
 
 	return (
-		<div className='container-fluid flex-column text-center pb-3'>
+		<div className='container-fluid d-flex flex-column h-100 text-center pb-3'>
 			<NewMemberForm onSubmit={({ email }) => {
 				addMember(GROUP, email)
 					.then((msg) => {
@@ -128,7 +128,7 @@ const NoteContainer = ({
 				</div>
 			</div>
 			{hasNotes ? (
-				<div className='d-flex flex-column'>
+				<div className='d-flex flex-column flex-grow-1'>
 					<div className='d-flex flex-row align-items-center justify-content-between px-2 pt-2'>
 						{/*TODO - check styling*/}
 						<div>
@@ -149,15 +149,13 @@ const NoteContainer = ({
 						</div>
 					</div>
 					<hr className='border-2' />
-					<div>
-						<QuillEditor
-							type={type}
-							notebookId={notebookId}
-							room={noteId}
-							toggleComments={() => setShowComments(!showComments)}
-							onChange={onDescriptionChange}
-						/>
-					</div>
+					<QuillEditor
+						type={type}
+						notebookId={notebookId}
+						room={noteId}
+						toggleComments={() => setShowComments(!showComments)}
+						onChange={onDescriptionChange}
+					/>
 				</div>
 			) : (
 				<div className='d-flex min-vh-100 flex-column justify-content-center align-items-center mx-auto py-3'>
