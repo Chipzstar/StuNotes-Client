@@ -48,7 +48,6 @@ class QuillEditor extends React.Component {
 		type === TYPES.SHARED ? this.initGroupObservers(notebookId, room) : this.initNotebookObservers(room);
 		window.addEventListener('blur', () => this.quill.blur());
 		this.setState({height: this.editorRef.current.clientHeight}, () => console.log("Current height:", this.state.height))
-		//this.resizeObserver.observe(document.getElementById("editor-wrapper"))
 	}
 
 	shouldComponentUpdate(nextProps, nextState, nextContext) {
@@ -63,14 +62,8 @@ class QuillEditor extends React.Component {
 	componentWillUnmount() {
 		//this.persistence.destroy()
 		this.wsProvider.destroy();
-		//this.yDoc.destroy();
+		this.yDoc.destroy();
 	}
-
-	/*resizeObserver = new ResizeObserver(entries => {
-		const height = entries[0].target.clientHeight
-		console.log("Current height:", height)
-		this.setState({ height })
-	})*/
 
 	initNotebookObservers(room) {
 		this.yText.observe(() => {
@@ -151,34 +144,6 @@ class QuillEditor extends React.Component {
 		})
 		this.binding = new QuillBinding(this.yText, this.quill, this.wsProvider.awareness);
 	};
-
-	/*onNewComment = () => {
-		let { notebookId, room } = this.props;
-		this.quill.focus();
-		let range = this.quill.getSelection();
-		console.log(range);
-		let comment = prompt('Please enter Comment', '');
-		console.log(comment);
-		if (comment == null || comment === '') {
-			alert('User cancelled the prompt');
-		} else {
-			if (range) {
-				if (!range.length) {
-					alert('Please select text');
-				} else {
-					let text = this.quill.getText(range.index, range.length);
-					console.log('User has highlighted: ', text);
-					this.state.metaData.push({ range, comment });
-					this.quill.formatText(range.index, range.length, {
-						background: '#fff72b'
-					});
-				}
-			} else {
-				alert('User cursor is not in editor');
-			}
-		}
-		this.quill.blur();
-	};*/
 
 	render() {
 		return (
