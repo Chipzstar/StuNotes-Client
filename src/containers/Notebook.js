@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useHistory, useParams } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
 import moment from 'moment';
-import  debounce from 'lodash/debounce';
+import debounce from 'lodash/debounce';
 //components
 import NoteList from '../components/NoteList';
 import NoteContainer from '../components/NoteContainer';
@@ -212,7 +212,9 @@ const Notebook = ({ notebookId, notebookName, notes, type }) => {
 		console.table({ ...data });
 		await updateNote(user.uid, type, id, data);
 		if ('comments' in data) data.comments.forEach((c, index) => data.comments[index]['createdAt'] = c.createdAt.getTime());
-		members.length > 1 && updateMemberNotes({ members, id, data }).catch(err => console.error(err));
+		members.length > 1 && updateMemberNotes({ members, id, data })
+			.then(res => console.log('member notes updated', res))
+			.catch(err => console.error(err));
 	}
 
 	return (

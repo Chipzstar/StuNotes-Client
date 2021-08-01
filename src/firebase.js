@@ -5,6 +5,7 @@ import 'firebase/functions';
 import 'firebase/database';
 
 import { TYPES } from './constants';
+import { groupNoteSchema, notebookNoteSchema } from './schemas';
 
 const app = firebase.initializeApp({
 	apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
@@ -80,13 +81,11 @@ export const createNotebookNote = async (uid, notebookId, docId, title, author) 
 				});
 			}
 			await noteRef.set({
+				...notebookNoteSchema,
 				title,
 				author,
 				notebookId,
-				groupId: null,
-				createdAt: new Date(),
-				description: '',
-				tags: []
+				createdAt: new Date()
 			});
 			resolve(`Note Created Successfully!`)
 		} catch (e) {
@@ -98,6 +97,7 @@ export const createNotebookNote = async (uid, notebookId, docId, title, author) 
 
 export const updateNote = async (uid, type, docId, data) => {
 	console.log("Data to update:", data)
+	console.log("Type", type)
 	return new Promise(async (resolve, reject) => {
 		try {
 			if (type === TYPES.SHARED) {
@@ -106,8 +106,8 @@ export const updateNote = async (uid, type, docId, data) => {
 					...data
 				});
 			}
-			let Ref = store.collection(`root/${uid}/notes`);
-			await Ref.doc(docId).update({
+			let notesRef = store.collection(`root/${uid}/notes`);
+			await notesRef.doc(docId).update({
 				...data
 			});
 			resolve('Note Updated!');
@@ -313,13 +313,11 @@ export const createGroupNote = async (uid, groupId, docId, title, author) => {
 				});
 			}
 			await noteRef.set({
+				...groupNoteSchema,
 				title,
 				author,
-				notebookId: null,
 				groupId,
 				createdAt: new Date(),
-				description: '',
-				tags: []
 			});
 			resolve(`Note Created Successfully!`)
 		} catch (e) {
